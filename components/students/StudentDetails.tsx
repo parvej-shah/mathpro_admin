@@ -10,9 +10,13 @@ import {
   faCode,
   faSchool,
   faMapMarkerAlt,
-  faShirt,
+  faAddressCard,
   faCalendar,
-  faFileAlt,
+  faUsers,
+  faUser,
+  faVenusMars,
+  faGlobe,
+  faPeopleArrows,
 } from "@fortawesome/free-solid-svg-icons";
 import type { StudentBasicInfo } from "@/services/student.service";
 
@@ -24,33 +28,45 @@ const fieldConfig = [
   { label: "Phone", key: "phone", icon: faPhone },
   { label: "Email", key: "email", icon: faEnvelope },
   { label: "CF Handle", key: "cf_handle", icon: faCode, fallback: "Not set" },
-  { label: "Institution", key: "currentInstitution", icon: faSchool },
+  { label: "Facebook ID", key: "facebookId", icon: faAddressCard, fallback: "Not set" },
+  { label: "Address", key: "address", icon: faMapMarkerAlt, fallback: "Not set" },
+  { label: "School / College", key: "schoolCollege", icon: faSchool, fallback: "Not set" },
+  { label: "Group", key: "group", icon: faUsers, fallback: "Not set" },
   {
-    label: "Location",
-    key: "location",
-    icon: faMapMarkerAlt,
-    getValue: (info: StudentBasicInfo) =>
-      info.districtName
-        ? `${info.districtName}${info.subDistrict ? `, ${info.subDistrict}` : ""}`
-        : "Not specified",
+    label: "Guardian Name",
+    key: "guardianName",
+    icon: faUser,
+    fallback: "Not set",
   },
   {
-    label: "T-Shirt Size",
-    key: "tshirt_size",
-    icon: faShirt,
-    fallback: "Not specified",
+    label: "Guardian Mobile",
+    key: "guardianMobile",
+    icon: faPhone,
+    fallback: "Not set",
   },
   {
-    label: "Passing Year",
-    key: "passingYear",
+    label: "Relation",
+    key: "relationWithGuardian",
+    icon: faPeopleArrows,
+    fallback: "Not set",
+  },
+  {
+    label: "Gender",
+    key: "gender",
+    icon: faVenusMars,
+    fallback: "Not set",
+  },
+  {
+    label: "Class",
+    key: "classLevel",
     icon: faCalendar,
-    fallback: "Not specified",
+    fallback: "Not set",
   },
   {
-    label: "Department",
-    key: "department",
-    icon: faFileAlt,
-    fallback: "Not specified",
+    label: "Version",
+    key: "version",
+    icon: faGlobe,
+    fallback: "Not set",
   },
 ];
 
@@ -66,11 +82,16 @@ export function StudentDetails({ basicInfo }: StudentDetailsProps) {
       <CardContent className="p-5">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {fieldConfig.map((field) => {
+            const rawValue = basicInfo[field.key];
             const value =
-              field.getValue?.(basicInfo) ||
-              (basicInfo[field.key] as string) ||
-              field.fallback ||
-              "N/A";
+              typeof rawValue === "string" && rawValue.trim()
+                ? rawValue
+                : field.fallback || "N/A";
+
+            const normalizedValue =
+              field.key === "classLevel" && value !== "Not set" && value !== "N/A"
+                ? value.toUpperCase()
+                : value;
 
             return (
               <div
@@ -86,49 +107,68 @@ export function StudentDetails({ basicInfo }: StudentDetailsProps) {
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
                     {field.label}
                   </p>
-                  <p className="truncate text-sm font-semibold">{value}</p>
+                  <p className="truncate text-sm font-semibold">{normalizedValue}</p>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Skills Section */}
-        {basicInfo.skills && basicInfo.skills.length > 0 && (
+        {/* Location / skills Section */}
+        {(basicInfo.districtName || basicInfo.skills?.length) && (
           <div className="mt-8">
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-              <FontAwesomeIcon icon={faCode} className="h-5 w-5 text-primary" />
-              Skills
-            </h3>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {basicInfo.skills.map((skill, index) => {
-                const experienceYear = Number(
-                  (skill as { experienceYear?: string }).experienceYear || 0
-                );
-                const progress = Math.min(experienceYear * 20, 100);
+            {basicInfo.districtName && (
+              <div className="rounded-2xl border border-border/70 bg-background/45 p-4">
+                <div className="flex items-center gap-2">
+                  <FontAwesomeIcon icon={faMapMarkerAlt} className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Location
+                  </p>
+                </div>
+                <p className="mt-2 text-sm font-semibold">
+                  {basicInfo.districtName}
+                  {basicInfo.subDistrict ? `, ${basicInfo.subDistrict}` : ""}
+                </p>
+              </div>
+            )}
 
-                return (
-                  <Card key={index} className="rounded-2xl border-border/70 bg-background/45">
-                    <CardContent className="p-4">
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold">
-                          {String(skill.skillName)}
-                        </p>
-                        <Badge variant="secondary" className="rounded-full text-xs">
-                          {experienceYear} YRS
-                        </Badge>
-                      </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            {basicInfo.skills && basicInfo.skills.length > 0 && (
+              <div className="mt-4">
+                <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+                  <FontAwesomeIcon icon={faCode} className="h-5 w-5 text-primary" />
+                  Skills
+                </h3>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {basicInfo.skills.map((skill, index) => {
+                    const experienceYear = Number(
+                      (skill as { experienceYear?: string }).experienceYear || 0
+                    );
+                    const progress = Math.min(experienceYear * 20, 100);
+
+                    return (
+                      <Card key={index} className="rounded-2xl border-border/70 bg-background/45">
+                        <CardContent className="p-4">
+                          <div className="mb-2 flex items-center justify-between gap-3">
+                            <p className="text-sm font-semibold">
+                              {String(skill.skillName)}
+                            </p>
+                            <Badge variant="secondary" className="rounded-full text-xs">
+                              {experienceYear} YRS
+                            </Badge>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -6,11 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSchool,
-  faBuilding,
+  faUsers,
+  faGlobe,
   faMapMarkerAlt,
   faLightbulb,
   faCalendar,
   faTools,
+  faVenusMars,
 } from "@fortawesome/free-solid-svg-icons";
 import type { StudentBasicInfo } from "@/services/student.service";
 
@@ -30,11 +32,11 @@ const getInterestLabel = (interest: string): string => {
   return interestMap[interest] || interest;
 };
 
-const getAcademicLevelLabel = (level: string): string => {
+const getClassLevelLabel = (level: string): string => {
   const levelMap: Record<string, string> = {
-    UNIVERSITY: "University",
-    COLLEGE: "College",
-    HIGHSCHOOL: "High School",
+    JSC: "JSC",
+    SSC: "SSC",
+    HSC: "HSC",
   };
   return levelMap[level] || level;
 };
@@ -64,23 +66,53 @@ export function StudentProfileHeader({ basicInfo }: StudentProfileHeaderProps) {
             </p>
 
             <div className="mt-4 flex flex-wrap justify-center gap-2 md:justify-start">
-              {basicInfo.currentAcademicLevel && (
+              {basicInfo.schoolCollege && (
                 <Badge
                   variant="secondary"
                   className="gap-1 rounded-full border border-white/35 bg-white/20 px-3 py-1 text-white backdrop-blur-sm"
                 >
                   <FontAwesomeIcon icon={faSchool} className="h-3 w-3" />
-                  {getAcademicLevelLabel(basicInfo.currentAcademicLevel)}
+                  {basicInfo.schoolCollege}
                 </Badge>
               )}
 
-              {basicInfo.currentInstitution && (
+              {basicInfo.group && (
                 <Badge
                   variant="secondary"
                   className="gap-1 rounded-full border border-white/35 bg-white/20 px-3 py-1 text-white backdrop-blur-sm"
                 >
-                  <FontAwesomeIcon icon={faBuilding} className="h-3 w-3" />
-                  {basicInfo.currentInstitution}
+                  <FontAwesomeIcon icon={faUsers} className="h-3 w-3" />
+                  {basicInfo.group}
+                </Badge>
+              )}
+
+              {basicInfo.classLevel && (
+                <Badge
+                  variant="secondary"
+                  className="gap-1 rounded-full border border-white/35 bg-white/20 px-3 py-1 text-white backdrop-blur-sm"
+                >
+                  <FontAwesomeIcon icon={faSchool} className="h-3 w-3" />
+                  {getClassLevelLabel(basicInfo.classLevel)}
+                </Badge>
+              )}
+
+              {basicInfo.version && (
+                <Badge
+                  variant="secondary"
+                  className="gap-1 rounded-full border border-white/35 bg-white/20 px-3 py-1 text-white backdrop-blur-sm"
+                >
+                  <FontAwesomeIcon icon={faGlobe} className="h-3 w-3" />
+                  {basicInfo.version}
+                </Badge>
+              )}
+
+              {basicInfo.gender && (
+                <Badge
+                  variant="secondary"
+                  className="gap-1 rounded-full border border-white/35 bg-white/20 px-3 py-1 text-white backdrop-blur-sm"
+                >
+                  <FontAwesomeIcon icon={faVenusMars} className="h-3 w-3" />
+                  {basicInfo.gender}
                 </Badge>
               )}
 

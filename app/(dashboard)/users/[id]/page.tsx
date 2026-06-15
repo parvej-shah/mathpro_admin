@@ -345,8 +345,16 @@ export default function StudentProfilePage({ params }: PageProps) {
     name?: string;
     email?: string;
     phone?: string;
-    currentInstitution?: string;
-    currentAcademicLevel?: string;
+    facebookId?: string;
+    address?: string;
+    schoolCollege?: string;
+    group?: string;
+    guardianName?: string;
+    guardianMobile?: string;
+    relationWithGuardian?: string;
+    gender?: string;
+    classLevel?: string;
+    version?: string;
     districtName?: string;
     subDistrict?: string;
     interestedTopic?: string;
@@ -404,7 +412,13 @@ export default function StudentProfilePage({ params }: PageProps) {
                   [faPhone, basicInfo.phone || "No phone"],
                   [
                     faGraduationCap,
-                    basicInfo.currentInstitution || basicInfo.currentAcademicLevel || "No institution",
+                    basicInfo.schoolCollege || basicInfo.group || "No institution",
+                  ],
+                  [
+                    faCog,
+                    basicInfo.classLevel && basicInfo.version
+                      ? `${basicInfo.classLevel} / ${basicInfo.version}`
+                      : basicInfo.classLevel || basicInfo.version || "No class info",
                   ],
                   [
                     faLocationDot,
@@ -430,9 +444,29 @@ export default function StudentProfilePage({ params }: PageProps) {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              {basicInfo.currentAcademicLevel && (
+              {basicInfo.schoolCollege && (
                 <Badge variant="outline" className="rounded-full bg-background/50 px-3 py-1">
-                  {basicInfo.currentAcademicLevel}
+                  {basicInfo.schoolCollege}
+                </Badge>
+              )}
+              {basicInfo.group && (
+                <Badge variant="outline" className="rounded-full bg-background/50 px-3 py-1">
+                  {basicInfo.group}
+                </Badge>
+              )}
+              {basicInfo.classLevel && (
+                <Badge variant="outline" className="rounded-full bg-background/50 px-3 py-1">
+                  {basicInfo.classLevel}
+                </Badge>
+              )}
+              {basicInfo.version && (
+                <Badge variant="outline" className="rounded-full bg-background/50 px-3 py-1">
+                  {basicInfo.version}
+                </Badge>
+              )}
+              {basicInfo.gender && (
+                <Badge variant="outline" className="rounded-full bg-background/50 px-3 py-1">
+                  {basicInfo.gender}
                 </Badge>
               )}
               {basicInfo.interestedTopic && (
