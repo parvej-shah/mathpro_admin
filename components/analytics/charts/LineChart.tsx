@@ -62,8 +62,9 @@ export function LineChart({
             contentStyle={{
               borderRadius: 8,
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              border: "none",
-              backgroundColor: "hsl(var(--background))",
+              border: "1px solid var(--border)",
+              backgroundColor: "var(--background)",
+              color: "var(--foreground)",
             }}
           />
           <Legend />

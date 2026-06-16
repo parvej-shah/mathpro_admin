@@ -85,15 +85,7 @@ export function ChapterItem({
                           : "bg-muted text-muted-foreground"
                       )}
                     >
-                      <span
-                        className={cn(
-                          "h-1.5 w-1.5 rounded-full",
-                          chapter.is_live
-                            ? "bg-success"
-                            : "bg-muted-foreground/40"
-                        )}
-                      />
-                      {chapter.is_live ? "Live" : "Draft"}
+                      {chapter.is_live ? "Published" : "Draft"}
                     </span>
                     {chapter.is_free && (
                       <span className="shrink-0 rounded-full bg-info/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-info">

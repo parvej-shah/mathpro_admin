@@ -34,6 +34,15 @@ const categoryConfig: Record<
   TEXT: { icon: FileText, cls: "bg-muted text-muted-foreground" },
 };
 
+const liveClassStatusConfig: Record<
+  NonNullable<Module["live_status"]>,
+  { label: string; cls: string }
+> = {
+  SCHEDULED: { label: "Upcoming", cls: "bg-warning/10 text-warning" },
+  LIVE: { label: "Live", cls: "bg-destructive/10 text-destructive" },
+  ENDED: { label: "Live Ended", cls: "bg-muted text-muted-foreground" },
+};
+
 /**
  * Module Item Component
  * A single sortable module row with category icon and inline actions.
@@ -43,6 +52,9 @@ export function ModuleItem({ module, onDelete }: ModuleItemProps) {
   const category = (module.category || module.type) as ModuleCategory;
   const cfg = categoryConfig[category] || categoryConfig.TEXT;
   const CategoryIcon = cfg.icon;
+  const liveClassStatus = module.live_status
+    ? liveClassStatusConfig[module.live_status]
+    : null;
 
   const {
     attributes,
@@ -107,6 +119,31 @@ export function ModuleItem({ module, onDelete }: ModuleItemProps) {
 
       {/* Meta */}
       <div className="hidden shrink-0 items-center gap-2 sm:flex">
+        {module.is_free && (
+          <span className="rounded-full bg-info/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-info">
+            Free
+          </span>
+        )}
+        {liveClassStatus && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+              liveClassStatus.cls
+            )}
+          >
+            <span
+              className={cn(
+                "h-1.5 w-1.5 rounded-full",
+                module.live_status === "ENDED"
+                  ? "bg-muted-foreground/40"
+                  : module.live_status === "SCHEDULED"
+                    ? "bg-warning"
+                    : "bg-destructive"
+              )}
+            />
+            {liveClassStatus.label}
+          </span>
+        )}
         {module.score !== undefined && (
           <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
             {module.score} pts
@@ -120,19 +157,8 @@ export function ModuleItem({ module, onDelete }: ModuleItemProps) {
               : "bg-muted text-muted-foreground"
           )}
         >
-          <span
-            className={cn(
-              "h-1.5 w-1.5 rounded-full",
-              module.is_live ? "bg-success" : "bg-muted-foreground/40"
-            )}
-          />
-          {module.is_live ? "Live" : "Draft"}
+          {module.is_live ? "Published" : "Draft"}
         </span>
-        {module.is_free && (
-          <span className="rounded-full bg-info/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-info">
-            Free
-          </span>
-        )}
       </div>
 
       {/* Actions — revealed on hover */}

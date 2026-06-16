@@ -31,7 +31,6 @@ import { cn } from "@/lib/utils";
 import type { CreateCourseData } from "@/services/course.service";
 import type {
   CourseFormData,
-  Instructor,
   FAQ,
   Feedback,
   CourseChipsCanonical,
@@ -42,10 +41,10 @@ import {
   createDefaultCourseFormData,
   normalizeCourseForEditor,
   serializeFeedbacksForApi,
-  serializeInstructorsForApi,
   serializeTagsForApi,
   serializeYouGetForApi,
 } from "@/lib/course-form-mapper";
+import { teacherService } from "@/services/teacher.service";
 
 interface CourseFormProps {
   mode: "create" | "edit";
@@ -104,7 +103,7 @@ export function CourseForm({
   });
 
   const [activeTab, setActiveTab] = useState<TabKey>("basic");
-  const [instructors, setInstructors] = useState<Instructor[]>([]);
+  const [selectedInstructorIds, setSelectedInstructorIds] = useState<number[]>([]);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [chips, setChips] = useState<CourseChipsCanonical>(
@@ -121,7 +120,11 @@ export function CourseForm({
     if (!isEdit || !course) return;
     const normalized = normalizeCourseForEditor(course);
     reset(normalized.formData);
-    setInstructors(normalized.instructors);
+    setSelectedInstructorIds(
+      normalized.instructors
+        .map((i: { id?: number }) => i.id)
+        .filter((id): id is number => typeof id === "number")
+    );
     setFaqs(normalized.faqs);
     setFeedbacks(normalized.feedbacks);
     setChips(normalized.chips);
@@ -147,23 +150,6 @@ export function CourseForm({
           return;
         }
       }
-
-      const instructorsWithImages = await Promise.all(
-        instructors.map(async (instructor) => {
-          if (!instructor.image) return instructor;
-          try {
-            const imageUploadedLink = await uploadRenamed(
-              instructor.image,
-              "instructors",
-              "course-instructor-image"
-            );
-            return { ...instructor, imageUploadedLink };
-          } catch {
-            toast.error(`Failed to upload image for ${instructor.name}`);
-            return instructor;
-          }
-        })
-      );
 
       const feedbacksWithImages = await Promise.all(
         feedbacks.map(async (feedback) => {
@@ -207,9 +193,6 @@ export function CourseForm({
         enrolled: data.enrolled,
         you_get: serializeYouGetForApi(data.you_get),
         chips: chipsPayload,
-        instructor_list: {
-          instructors: serializeInstructorsForApi(instructorsWithImages),
-        },
         faq_list: { faqs },
         feedback_list: {
           feedbacks: serializeFeedbacksForApi(feedbacksWithImages),
@@ -220,7 +203,20 @@ export function CourseForm({
         course_outline: data.course_outline || undefined,
       };
 
-      await onSubmit(payload);
+      const result = await onSubmit(payload);
+
+      // Sync instructor assignments via the junction table
+      if (isEdit) {
+        const courseId = (course as { id?: number })?.id;
+        if (courseId) {
+          await teacherService.replaceInstructorsForCourse(courseId, selectedInstructorIds);
+        }
+      } else {
+        const newCourseId = (result as { id?: number } | undefined)?.id;
+        if (newCourseId) {
+          await teacherService.replaceInstructorsForCourse(newCourseId, selectedInstructorIds);
+        }
+      }
     } catch (error) {
       console.error(`Error ${isEdit ? "updating" : "creating"} course:`, error);
       // Error toast handled by the mutation.
@@ -322,8 +318,8 @@ export function CourseForm({
               icon={Users}
             >
               <InstructorManagement
-                instructors={instructors}
-                onInstructorsChange={setInstructors}
+                selectedIds={selectedInstructorIds}
+                onSelectedIdsChange={setSelectedInstructorIds}
               />
             </FormSection>
 

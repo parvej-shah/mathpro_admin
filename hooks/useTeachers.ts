@@ -189,8 +189,15 @@ export function useDeleteTeacher() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lists() });
       toast.success("Teacher deleted successfully");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete teacher");
+    onError: (error: Error | AxiosError) => {
+      const axiosErr = error instanceof AxiosError ? error : null;
+      const errData = axiosErr?.response?.data as { error?: unknown; message?: unknown } | undefined;
+      const message =
+        (typeof errData?.error === "string" && errData.error) ||
+        (typeof errData?.message === "string" && errData.message) ||
+        (typeof error.message === "string" && error.message) ||
+        "Failed to delete teacher";
+      toast.error(message);
     },
   });
 }

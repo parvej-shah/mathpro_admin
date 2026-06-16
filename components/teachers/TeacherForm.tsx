@@ -74,7 +74,6 @@ export function TeacherForm({
       github: "",
     },
     courses_teaching: [] as number[],
-    bundles_teaching: [] as number[],
     category: "instructor" as string,
     isActive: true,
     isPrivileged: false, // CRITICAL: Controls admin panel access
@@ -124,7 +123,6 @@ export function TeacherForm({
           github: "",
         },
         courses_teaching: [],
-        bundles_teaching: [],
         category: "instructor",
         isActive: true,
         isPrivileged: false,
@@ -152,7 +150,6 @@ export function TeacherForm({
           github: teacher.social?.github || "",
         },
         courses_teaching: teacher.courses_teaching || [],
-        bundles_teaching: teacher.bundles_teaching || [],
         category: teacher.category || "instructor",
         isActive: teacher.isActive !== undefined ? teacher.isActive : true,
         isPrivileged:
@@ -245,10 +242,6 @@ export function TeacherForm({
         courses_teaching:
           formData.courses_teaching.length > 0
             ? formData.courses_teaching
-            : undefined,
-        bundles_teaching:
-          formData.bundles_teaching.length > 0
-            ? formData.bundles_teaching
             : undefined,
         category: formData.category,
         isActive: formData.isActive,

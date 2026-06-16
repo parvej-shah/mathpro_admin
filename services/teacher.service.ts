@@ -27,8 +27,6 @@ export interface Teacher {
   };
   courses_teaching: number[]; // Course IDs
   courses_teaching_details?: unknown[]; // Full course objects (in full response)
-  bundles_teaching: number[]; // Bundle IDs
-  bundles_teaching_details?: unknown[]; // Full bundle objects (in full response)
   category: "instructor" | "teacher" | string;
   isActive: boolean;
   isPrivileged: boolean; // Controls admin panel access
@@ -63,7 +61,6 @@ export interface CreateTeacherData {
     github?: string;
   };
   courses_teaching?: number[]; // Optional - array of course IDs
-  bundles_teaching?: number[]; // Optional - array of bundle IDs
   category?: string; // Default: "instructor"
   isActive?: boolean; // Default: true
   isPrivileged?: boolean; // CRITICAL: Controls admin panel access (default: false)
@@ -83,6 +80,21 @@ export const teacherService = {
    */
   getTeachersNames: async (): Promise<ApiResponse<Array<{ id: number; name: string }>>> => {
     const response = await apiClient.get(`${V2_BASE}/list-names`);
+    return response.data;
+  },
+
+  /**
+   * Atomically replace all instructor assignments for a course
+   * POST /v2/admin/teacher/replace-course-instructors
+   */
+  replaceInstructorsForCourse: async (
+    courseId: number,
+    teacherIds: number[]
+  ): Promise<ApiResponse<unknown>> => {
+    const response = await apiClient.post(`${V2_BASE}/replace-course-instructors`, {
+      course_id: courseId,
+      teacher_ids: teacherIds,
+    });
     return response.data;
   },
 
@@ -229,15 +241,6 @@ export const teacherService = {
    */
   getTeachersByCourse: async (courseId: number): Promise<ApiResponse<Teacher[]>> => {
     const response = await apiClient.get(`${V2_BASE}/by-course/${courseId}`);
-    return response.data;
-  },
-
-  /**
-   * Get teachers by bundle
-   * GET /v2/admin/teacher/by-bundle/{bundleId}
-   */
-  getTeachersByBundle: async (bundleId: number): Promise<ApiResponse<Teacher[]>> => {
-    const response = await apiClient.get(`${V2_BASE}/by-bundle/${bundleId}`);
     return response.data;
   },
 

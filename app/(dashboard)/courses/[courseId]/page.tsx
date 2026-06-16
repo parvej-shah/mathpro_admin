@@ -639,7 +639,7 @@ export default function CourseViewPage() {
                 }
               />
               <Label htmlFor="chapter-live" className="cursor-pointer">
-                Make Chapter Live
+                Publish
               </Label>
             </div>
           </div>
@@ -727,7 +727,7 @@ export default function CourseViewPage() {
                   }
                 />
                 <Label htmlFor="edit-chapter-live" className="cursor-pointer">
-                  Make Chapter Live
+                  Publish
                 </Label>
               </div>
             </div>

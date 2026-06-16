@@ -26,14 +26,11 @@ interface PieChartProps {
 }
 
 const DEFAULT_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--secondary))",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#06b6d4",
-  "#84cc16",
-  "#f97316",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
 ];
 
 export function PieChart({
@@ -48,8 +45,24 @@ export function PieChart({
   label = true,
 }: PieChartProps) {
   const renderLabel = label
-    ? ({ name, percent }: { name: string; percent: number }) =>
-        `${name}: ${(percent * 100).toFixed(0)}%`
+    ? (props: {
+        x: number;
+        y: number;
+        textAnchor: string;
+        name: string;
+        percent: number;
+      }) => (
+        <text
+          x={props.x}
+          y={props.y}
+          textAnchor={props.textAnchor as "start" | "middle" | "end"}
+          dominantBaseline="central"
+          fill="var(--foreground)"
+          fontSize={12}
+        >
+          {`${props.name}: ${(props.percent * 100).toFixed(0)}%`}
+        </text>
+      )
     : undefined;
 
   return (
@@ -80,8 +93,9 @@ export function PieChart({
             contentStyle={{
               borderRadius: 8,
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              border: "none",
-              backgroundColor: "hsl(var(--background))",
+              border: "1px solid var(--border)",
+              backgroundColor: "var(--background)",
+              color: "var(--foreground)",
             }}
           />
           <Legend />

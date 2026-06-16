@@ -236,11 +236,13 @@ function normalizeThumbnails(chips: UnknownRecord): CourseThumbnails {
   return parsed;
 }
 
-function normalizeInstructor(entry: unknown): Instructor {
+function normalizeInstructor(entry: unknown): Instructor & { id?: number } {
   const record = isRecord(entry) ? entry : {};
   const image = asNonEmptyString(record.image);
   const imageUploadedLink = asNonEmptyString(record.imageUploadedLink);
+  const id = typeof record.id === "number" ? record.id : undefined;
   return {
+    ...(id !== undefined ? { id } : {}),
     name: asString(record.name),
     credibility: asString(record.credibility),
     imageUploadedLink: image ?? imageUploadedLink,
@@ -262,7 +264,7 @@ function normalizeFeedback(entry: unknown): Feedback {
 export interface NormalizedCourseEditorData {
   formData: CourseFormData;
   chips: CourseChipsCanonical;
-  instructors: Instructor[];
+  instructors: Array<Instructor & { id?: number }>;
   faqs: FAQ[];
   feedbacks: Feedback[];
 }
@@ -386,20 +388,6 @@ export function serializeYouGetForApi(raw: string | undefined): Record<string, s
   const normalized = asString(raw).trim();
   if (!normalized) return undefined;
   return { you_get: normalized };
-}
-
-export function serializeInstructorsForApi(
-  instructors: Instructor[]
-): Array<Record<string, unknown>> {
-  return instructors.map((instructor) => {
-    const image = asString(instructor.imageUploadedLink);
-    return {
-      name: instructor.name,
-      credibility: instructor.credibility,
-      image,
-      imageUploadedLink: image,
-    };
-  });
 }
 
 export function serializeFeedbacksForApi(

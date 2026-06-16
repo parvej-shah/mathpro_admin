@@ -381,7 +381,7 @@ function KpiCard({
   };
 
   const strokeColors: Record<typeof tone, string> = {
-    primary: "hsl(var(--primary))",
+    primary: "var(--primary)",
     success: "#10b981",
     info: "#0ea5e9",
     warning: "#f59e0b",
@@ -498,7 +498,7 @@ function UsageBars({
           {
             dataKey: "count",
             name: "Redemptions",
-            color: "hsl(var(--primary))",
+            color: "var(--primary)",
             radius: [6, 6, 0, 0],
           },
         ]}

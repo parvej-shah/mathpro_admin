@@ -17,6 +17,7 @@ export default function NewCoursePage() {
 
     if (newCourse?.id) {
       router.push(`/courses/${newCourse.id}`);
+      return { id: newCourse.id as number };
     } else {
       toast.error("Course created but failed to get course ID");
     }
