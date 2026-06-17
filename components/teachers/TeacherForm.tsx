@@ -64,7 +64,7 @@ export function TeacherForm({
     login: "",
     role: "",
     university: "",
-    bio: "",
+    credibility: "",
     image: "",
     achievements: [] as string[],
     social: {
@@ -74,7 +74,6 @@ export function TeacherForm({
       github: "",
     },
     courses_teaching: [] as number[],
-    category: "instructor" as string,
     isActive: true,
     isPrivileged: false, // CRITICAL: Controls admin panel access
   });
@@ -113,7 +112,7 @@ export function TeacherForm({
         login: "",
         role: "",
         university: "",
-        bio: "",
+        credibility: "",
         image: "",
         achievements: [],
         social: {
@@ -123,7 +122,6 @@ export function TeacherForm({
           github: "",
         },
         courses_teaching: [],
-        category: "instructor",
         isActive: true,
         isPrivileged: false,
       });
@@ -140,7 +138,7 @@ export function TeacherForm({
         login: teacher.login || "",
         role: teacher.role || "",
         university: teacher.university || "",
-        bio: teacher.bio || "",
+        credibility: teacher.bio || "",
         image: teacher.image || "",
         achievements: teacher.achievements || [],
         social: {
@@ -150,7 +148,6 @@ export function TeacherForm({
           github: teacher.social?.github || "",
         },
         courses_teaching: teacher.courses_teaching || [],
-        category: teacher.category || "instructor",
         isActive: teacher.isActive !== undefined ? teacher.isActive : true,
         isPrivileged:
           teacher.isPrivileged !== undefined ? teacher.isPrivileged : false,
@@ -221,7 +218,7 @@ export function TeacherForm({
         login: formData.login,
         role: formData.role || undefined,
         university: formData.university || undefined,
-        bio: formData.bio || undefined,
+        bio: formData.credibility || undefined,
         image: imageUrl || undefined,
         achievements:
           formData.achievements.length > 0 ? formData.achievements : undefined,
@@ -243,7 +240,6 @@ export function TeacherForm({
           formData.courses_teaching.length > 0
             ? formData.courses_teaching
             : undefined,
-        category: formData.category,
         isActive: formData.isActive,
         isPrivileged: formData.isPrivileged, // CRITICAL FLAG
       };
@@ -392,33 +388,15 @@ export function TeacherForm({
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, category: value })
-                }
-              >
-                <SelectTrigger id="category">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="instructor">Instructor</SelectItem>
-                  <SelectItem value="teacher">Teacher</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="bio">Bio</Label>
+              <Label htmlFor="credibility">Credibility</Label>
               <Textarea
-                id="bio"
-                value={formData.bio}
+                id="credibility"
+                value={formData.credibility}
                 onChange={(e) =>
-                  setFormData({ ...formData, bio: e.target.value })
+                  setFormData({ ...formData, credibility: e.target.value })
                 }
                 rows={3}
-                placeholder="e.g., Software Engineer at Google"
+                placeholder="Shown in the public teacher section"
               />
             </div>
           </div>

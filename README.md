@@ -11,7 +11,7 @@ Modern admin dashboard for the Math Pro platform built with Next.js 16, React 19
 - **State Management:** TanStack Query (React Query) + Zustand
 - **Form Handling:** React Hook Form
 - **Styling:** Tailwind CSS 3.4
-- **Build Tool:** Next.js (with webpack for AWS SDK compatibility)
+- **Build Tool:** Next.js default bundler
 
 ## 📋 Prerequisites
 

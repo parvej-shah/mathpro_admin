@@ -19,7 +19,7 @@ import {
 } from "@/hooks/useModules";
 import { uploadImageToS3 } from "@/lib/s3-upload";
 import { useCourseStore } from "@/lib/stores/course-store";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Module, ModuleCategory } from "@/types";
 
@@ -32,9 +32,12 @@ interface VideoModuleFormProps {
  * Video URL, hosting selection, description, and optional PDF attachment
  */
 export function VideoModuleForm({ module }: VideoModuleFormProps) {
+  const router = useRouter();
   const params = useParams();
   const courseId = params?.courseId ? parseInt(params.courseId as string) : 0;
-  const { closeModuleEditor, editingModuleId, draftChanges } = useCourseStore();
+  const { editingModuleId, draftChanges } = useCourseStore();
+
+  const navigateBack = () => router.push(`/courses/${courseId}`);
 
   const chapterId =
     module?.chapter_id || (draftChanges.chapterId as number) || 0;
@@ -78,14 +81,18 @@ export function VideoModuleForm({ module }: VideoModuleFormProps) {
   );
 
   // NEW: Optional PDF attachment (S3 or Google Drive)
+  // Read from data JSON first, then top-level column as fallback
   const [pdfAttachment, setPdfAttachment] = useState<string>(
     (moduleData.pdf_drive_link as string) ||
       (moduleData.pdf_attachment as string) ||
+      (module?.pdf_drive_link as string) ||
       ""
   );
-  const [pdfSource, setPdfSource] = useState<"s3" | "drive">(
-    (moduleData.pdf_drive_link ? "drive" : "s3") as "s3" | "drive"
-  );
+  const [pdfSource, setPdfSource] = useState<"s3" | "drive">(() => {
+    const link = (moduleData.pdf_drive_link as string) || (moduleData.pdf_attachment as string) || (module?.pdf_drive_link as string) || "";
+    if (!link) return "s3";
+    return link.includes("drive.google.com") ? "drive" : "s3";
+  });
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
 
@@ -120,10 +127,9 @@ export function VideoModuleForm({ module }: VideoModuleFormProps) {
       // Reset all fields from new module (or empty if creating new)
       setVideoHost((data.videoHost as string) || "Youtube");
       setVideoUrl((data.videoUrl as string) || "");
-      setPdfAttachment(
-        (data.pdf_drive_link as string) || (data.pdf_attachment as string) || ""
-      );
-      setPdfSource((data.pdf_drive_link ? "drive" : "s3") as "s3" | "drive");
+      const pdfLink = (data.pdf_drive_link as string) || (data.pdf_attachment as string) || (module?.pdf_drive_link as string) || "";
+      setPdfAttachment(pdfLink);
+      setPdfSource(!pdfLink ? "s3" : pdfLink.includes("drive.google.com") ? "drive" : "s3");
       setPdfFile(null);
       setIsUploadingPdf(false);
       setIsLiveClass(!!module?.live_status);
@@ -141,10 +147,9 @@ export function VideoModuleForm({ module }: VideoModuleFormProps) {
       // Same module, but data might have updated - sync state
       setVideoHost((data.videoHost as string) || "Youtube");
       setVideoUrl((data.videoUrl as string) || "");
-      setPdfAttachment(
-        (data.pdf_drive_link as string) || (data.pdf_attachment as string) || ""
-      );
-      setPdfSource((data.pdf_drive_link ? "drive" : "s3") as "s3" | "drive");
+      const pdfLink2 = (data.pdf_drive_link as string) || (data.pdf_attachment as string) || (module.pdf_drive_link as string) || "";
+      setPdfAttachment(pdfLink2);
+      setPdfSource(!pdfLink2 ? "s3" : pdfLink2.includes("drive.google.com") ? "drive" : "s3");
       setIsLiveClass(!!module.live_status);
       setLiveStatus(
         (module.live_status as "SCHEDULED" | "LIVE" | "ENDED") || "SCHEDULED"
@@ -194,16 +199,17 @@ export function VideoModuleForm({ module }: VideoModuleFormProps) {
         videoHost: videoHost,
       };
 
-      // NEW FIELDS (append after old pattern)
-      // Add PDF link based on source
+      // Store PDF link in data for frontend compatibility
       if (pdfUrl) {
         if (pdfSource === "drive") {
           moduleDataPayload.pdf_drive_link = pdfUrl;
         } else {
-          // For S3, store in pdf_attachment (new field)
           moduleDataPayload.pdf_attachment = pdfUrl;
         }
       }
+
+      // Top-level pdf_drive_link for the DB column (used by both S3 and Drive)
+      const pdfDriveLink = pdfUrl || null;
 
       if (editingModuleId && module) {
         // Use v2 enhanced API for updates
@@ -212,6 +218,7 @@ export function VideoModuleForm({ module }: VideoModuleFormProps) {
           ...data,
           category: category as ModuleCategory,
           data: moduleDataPayload,
+          pdf_drive_link: pdfDriveLink,
           // Live-Class toggle: clear all live fields when toggled off
           live_status: isLiveClass ? liveStatus : null,
           live_meeting_id: isLiveClass ? liveMeetingId || null : null,
@@ -221,8 +228,7 @@ export function VideoModuleForm({ module }: VideoModuleFormProps) {
               ? Math.floor(new Date(liveScheduledAt).getTime() / 1000)
               : null,
         });
-        closeModuleEditor();
-        toast.success("Video module saved successfully");
+        navigateBack();
       } else if (chapterId) {
         // Use legacy API for creates (until v2 create is available)
         // data.description comes from BaseModuleForm
@@ -236,9 +242,8 @@ export function VideoModuleForm({ module }: VideoModuleFormProps) {
           is_free: data.is_free || false,
           data: moduleDataPayload,
         });
-        closeModuleEditor();
+        navigateBack();
         useCourseStore.getState().clearDraft();
-        toast.success("Video module created successfully");
       } else {
         toast.error("Chapter ID is required");
       }
@@ -251,7 +256,7 @@ export function VideoModuleForm({ module }: VideoModuleFormProps) {
     <BaseModuleForm
       module={module}
       onSubmit={handleSubmit}
-      onCancel={closeModuleEditor}
+      onCancel={navigateBack}
     >
       <div className="space-y-4">
         {/* Video Hosting */}
@@ -372,7 +377,7 @@ export function VideoModuleForm({ module }: VideoModuleFormProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="s3">Upload to S3</SelectItem>
+                <SelectItem value="s3">Upload</SelectItem>
                 <SelectItem value="drive">Google Drive Link</SelectItem>
               </SelectContent>
             </Select>
@@ -380,7 +385,7 @@ export function VideoModuleForm({ module }: VideoModuleFormProps) {
             {/* PDF Input based on source */}
             {pdfSource === "s3" ? (
               <div key="pdf-source-s3" className="space-y-2">
-                <Label htmlFor="pdf-upload">Upload PDF to S3</Label>
+                <Label htmlFor="pdf-upload">Upload PDF</Label>
                 <Input
                   id="pdf-upload"
                   type="file"

@@ -10,12 +10,13 @@ import { uploadImageToS3 } from "@/lib/s3-upload";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { CourseHeaderHelpers } from "@/components/course/CourseHeaderHelpers";
 import { CourseBasicInfoForm } from "@/components/course/CourseBasicInfoForm";
-import { CourseMetadataForm } from "@/components/course/CourseMetadataForm";
+import {
+  CourseMetadataForm,
+  ThumbnailUploadField,
+} from "@/components/course/CourseMetadataForm";
 import { InstructorManagement } from "@/components/course/InstructorManagement";
 import { FAQManagement } from "@/components/course/FAQManagement";
-import { CourseThumbnailUpload } from "@/components/course/CourseThumbnailUpload";
 import { CourseLinkedBooks } from "@/components/course/CourseLinkedBooks";
 import { FormSection } from "@/components/course/FormSection";
 import {
@@ -55,13 +56,13 @@ interface CourseFormProps {
   isSubmitting?: boolean;
 }
 
-type TabKey = "basic" | "metadata" | "people" | "media" | "books";
+type TabKey = "basic" | "metadata" | "people" | "thumbnails" | "books";
 
 const TABS: { value: TabKey; label: string; icon: typeof Info }[] = [
   { value: "basic", label: "Basics", icon: Info },
   { value: "metadata", label: "Details", icon: SlidersHorizontal },
   { value: "people", label: "People & FAQ", icon: Users },
-  { value: "media", label: "Media", icon: ImageIcon },
+  { value: "thumbnails", label: "Thumbnails", icon: ImageIcon },
   { value: "books", label: "Linked Books", icon: BookOpen },
 ];
 
@@ -109,11 +110,6 @@ export function CourseForm({
   const [chips, setChips] = useState<CourseChipsCanonical>(
     createDefaultCourseChips()
   );
-  const [courseThumbnail, setCourseThumbnail] = useState<{
-    image?: File;
-    imagePreviewLink?: string;
-    imageUploadedLink?: string;
-  }>({});
 
   // Hydrate from existing course in edit mode.
   useEffect(() => {
@@ -128,29 +124,12 @@ export function CourseForm({
     setFaqs(normalized.faqs);
     setFeedbacks(normalized.feedbacks);
     setChips(normalized.chips);
-
-    const thumb = normalized.chips.thumbnails.course_thumbnail_16_9;
-    if (thumb) setCourseThumbnail({ imageUploadedLink: thumb });
   }, [isEdit, course, reset]);
 
   const submitting = isSubmitting || externalSubmitting;
 
   const handleFormSubmit = async (data: CourseFormData) => {
     try {
-      let thumbnailUrl = courseThumbnail.imageUploadedLink || "";
-      if (courseThumbnail.image) {
-        try {
-          thumbnailUrl = await uploadRenamed(
-            courseThumbnail.image,
-            "thumbnails",
-            "course-thumbnail"
-          );
-        } catch {
-          toast.error("Failed to upload thumbnail");
-          return;
-        }
-      }
-
       const feedbacksWithImages = await Promise.all(
         feedbacks.map(async (feedback) => {
           if (!feedback.image) return feedback;
@@ -169,14 +148,7 @@ export function CourseForm({
       );
 
       const chipsPayload = buildCourseChipsPayload(
-        {
-          ...chips,
-          thumbnails: {
-            ...chips.thumbnails,
-            course_thumbnail_16_9:
-              thumbnailUrl || chips.thumbnails.course_thumbnail_16_9,
-          },
-        },
+        chips,
         isEdit ? (course as { chips?: unknown })?.chips : undefined
       );
 
@@ -236,12 +208,11 @@ export function CourseForm({
         title={title?.trim() || (isEdit ? "Untitled course" : "Create a course")}
         description={
           isEdit
-            ? "Update the course details, media, and settings."
+            ? "Update the course details and settings."
             : "Create a course for SSC, JSC, or HSC students."
         }
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <CourseHeaderHelpers />
             <Button
               type="button"
               variant="outline"
@@ -333,16 +304,58 @@ export function CourseForm({
 
           </TabsContent>
 
-          <TabsContent value="media" className="mt-0 space-y-6">
+          <TabsContent value="thumbnails" className="mt-0 space-y-6">
             <FormSection
-              title="Course thumbnail"
-              description="A 16:9 image used across listings and the course page."
+              title="Thumbnails"
+              description="Upload the three thumbnail assets used across the course page."
               icon={ImageIcon}
             >
-              <CourseThumbnailUpload
-                thumbnail={courseThumbnail}
-                onThumbnailChange={setCourseThumbnail}
-              />
+              <div className="space-y-6">
+                <ThumbnailUploadField
+                  label="course_thumbnail_16_9"
+                  description="Main course thumbnail used across listings and the course page."
+                  value={chips.thumbnails.course_thumbnail_16_9}
+                  onChange={(course_thumbnail_16_9) =>
+                    setChips((prev) => ({
+                      ...prev,
+                      thumbnails: {
+                        ...prev.thumbnails,
+                        course_thumbnail_16_9,
+                      },
+                    }))
+                  }
+                />
+
+                <ThumbnailUploadField
+                  label="trailer_video_thumb_16_9"
+                  description="Thumbnail used for the course intro video."
+                  value={chips.thumbnails.trailer_video_thumb_16_9}
+                  onChange={(trailer_video_thumb_16_9) =>
+                    setChips((prev) => ({
+                      ...prev,
+                      thumbnails: {
+                        ...prev.thumbnails,
+                        trailer_video_thumb_16_9,
+                      },
+                    }))
+                  }
+                />
+
+                <ThumbnailUploadField
+                  label="facebook_community_thumb_16_9"
+                  description="Thumbnail used for the Facebook community link."
+                  value={chips.thumbnails.facebook_community_thumb_16_9}
+                  onChange={(facebook_community_thumb_16_9) =>
+                    setChips((prev) => ({
+                      ...prev,
+                      thumbnails: {
+                        ...prev.thumbnails,
+                        facebook_community_thumb_16_9,
+                      },
+                    }))
+                  }
+                />
+              </div>
             </FormSection>
           </TabsContent>
 

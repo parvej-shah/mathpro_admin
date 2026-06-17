@@ -88,7 +88,7 @@ docs/                    Integration guides — read the relevant one before tou
 - Route protection: `app/middleware.ts` checks the `token` cookie for SSR; deeper checks
   happen client-side via `useAuth()`.
 
-## Routing (App Router, Next.js 16, webpack)
+## Routing (App Router, Next.js 16)
 
 - Routes under `app/(dashboard)/<feature>/`. Layout-level `DashboardLayout` /
   `Sidebar` render once; pages don't re-render a second nav/sidebar.
@@ -101,4 +101,4 @@ docs/                    Integration guides — read the relevant one before tou
 - `npm run lint` (`next lint`) clean for files you touched.
 - `npm run format` (prettier: semi, trailing comma, 80 printWidth, 2 tabWidth) for touched
   files if formatting drifts.
-- `npm run dev` runs on port **2026** (`next dev --webpack -p 2026`).
+- `npm run dev` runs on port **2026** (`next dev -p 2026`).

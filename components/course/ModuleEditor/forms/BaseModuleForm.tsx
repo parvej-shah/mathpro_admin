@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/tooltip";
 import { HelpCircle } from "lucide-react";
 import { LexicalEditor } from "@/components/announcements/LexicalEditor";
+import { RichPreview } from "@/components/ui/rich-preview";
 import { sanitizeHtmlContent } from "@/lib/helpers";
 import type { Module } from "@/types";
 
@@ -81,7 +81,7 @@ export function BaseModuleForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form id="module-editor-form" onSubmit={handleSubmit} className="space-y-6">
       {/* Title */}
       <div className="space-y-2">
         <Label htmlFor="module-title">Module Title *</Label>
@@ -103,6 +103,7 @@ export function BaseModuleForm({
           onTextChange={(text) => setDescriptionText(text)}
           placeholder="Enter module description..."
         />
+        <RichPreview html={description} label="Description Preview" />
       </div>
 
       {/* Score */}
@@ -158,16 +159,6 @@ export function BaseModuleForm({
 
       {/* Module-specific content */}
       {children}
-
-      {/* Actions */}
-      <div className="flex justify-end gap-3 pt-4 border-t">
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-        )}
-        <Button type="submit">Save Module</Button>
-      </div>
     </form>
   );
 }

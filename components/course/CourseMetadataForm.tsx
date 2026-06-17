@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,9 +12,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Plus, Undo2, X } from "lucide-react";
+import { CalendarIcon, ImagePlus, Loader2, X } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { deleteStorageObject, uploadImageToS3 } from "@/lib/s3-upload";
 import type { CourseChipsCanonical, LabeledValue } from "@/types/course.types";
 import { dateToUnixSeconds, unixSecondsToDate } from "@/lib/course-form-mapper";
 
@@ -74,209 +77,179 @@ function ObjectEditor({
   );
 }
 
-function DynamicObjectEditor({
-  title,
+export function ThumbnailUploadField({
+  label,
   description,
-  data,
+  value,
   onChange,
 }: {
-  title: string;
+  label: string;
   description?: string;
-  data: Record<string, unknown>;
-  onChange: (next: Record<string, unknown>) => void;
+  value: string;
+  onChange: (next: string) => void;
 }) {
-  const entries = Object.entries(data);
-  const [removedStack, setRemovedStack] = useState<
-    Array<{ key: string; value: unknown }>
-  >([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState(value);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const makeUniqueKey = (baseKey: string, source: Record<string, unknown>) => {
-    if (!(baseKey in source)) return baseKey;
-    let i = 1;
-    let candidate = `${baseKey}_${i}`;
-    while (candidate in source) {
-      i += 1;
-      candidate = `${baseKey}_${i}`;
+  useEffect(() => {
+    setPreview(value);
+    setError(null);
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      if (preview.startsWith("blob:")) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const previousValue = value.trim();
+
+    const nextPreview = URL.createObjectURL(file);
+    setError(null);
+    setUploading(true);
+    setPreview(nextPreview);
+
+    try {
+      const uploadedUrl = await uploadImageToS3(file, {
+        purpose: "course-thumbnail",
+      });
+      onChange(uploadedUrl);
+      setPreview(uploadedUrl);
+
+      if (previousValue && previousValue !== uploadedUrl) {
+        try {
+          await deleteStorageObject({ publicUrl: previousValue });
+        } catch (deleteError) {
+          console.error("Failed to delete previous thumbnail:", deleteError);
+          toast.error("Uploaded the new thumbnail, but could not delete the old one.");
+        }
+      }
+    } catch (err) {
+      URL.revokeObjectURL(nextPreview);
+      setPreview(value);
+      setError(
+        err instanceof Error ? err.message : "Failed to upload thumbnail"
+      );
+    } finally {
+      setUploading(false);
+      e.target.value = "";
     }
-    return candidate;
   };
 
-  const renameKey = (oldKey: string, newKey: string) => {
-    const trimmed = newKey.trim();
-    if (!trimmed || trimmed === oldKey) return;
-    const next: Record<string, unknown> = {};
-    entries.forEach(([k, v]) => {
-      next[k === oldKey ? trimmed : k] = v;
-    });
-    onChange(next);
-  };
+  const handleClear = async () => {
+    const currentValue = value.trim();
+    if (!currentValue) {
+      if (preview.startsWith("blob:")) {
+        URL.revokeObjectURL(preview);
+      }
+      setPreview("");
+      setError(null);
+      onChange("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
 
-  const updateValue = (key: string, value: string) => {
-    onChange({ ...data, [key]: value });
-  };
+    setUploading(true);
+    setError(null);
 
-  const removeKey = (key: string) => {
-    setRemovedStack((prev) => [...prev, { key, value: data[key] }]);
-    const next = { ...data };
-    delete next[key];
-    onChange(next);
-  };
-
-  const undoRemove = () => {
-    const lastRemoved = removedStack[removedStack.length - 1];
-    if (!lastRemoved) return;
-    const nextKey = makeUniqueKey(lastRemoved.key, data);
-    onChange({ ...data, [nextKey]: lastRemoved.value });
-    setRemovedStack((prev) => prev.slice(0, -1));
-  };
-
-  const addRow = () => {
-    const key = makeUniqueKey("new_key", data);
-    onChange({ ...data, [key]: "" });
-  };
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>{title}</CardTitle>
-          {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={undoRemove}
-            disabled={removedStack.length === 0}
-          >
-            <Undo2 className="mr-2 h-4 w-4" />
-            Undo
-          </Button>
-          <Button type="button" variant="outline" size="sm" onClick={addRow}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {entries.map(([key, value]) => (
-          <div key={key} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2">
-            <Input
-              value={key}
-              placeholder="Key"
-              onChange={(e) => renameKey(key, e.target.value)}
-            />
-            <Input
-              value={String(value ?? "")}
-              placeholder="Value"
-              onChange={(e) => updateValue(key, e.target.value)}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => removeKey(key)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-        {entries.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No entries yet. Add a row to start.
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function SectionsEditor({
-  data,
-  onChange,
-}: {
-  data: LabeledValue[];
-  onChange: (next: LabeledValue[]) => void;
-}) {
-  const [removedStack, setRemovedStack] = useState<LabeledValue[]>([]);
-
-  const updateField = (index: number, field: "label" | "value", value: string) => {
-    const next = data.map((row, i) =>
-      i === index ? { ...row, [field]: value } : row
-    );
-    onChange(next);
-  };
-
-  const removeRow = (index: number) => {
-    setRemovedStack((prev) => [...prev, data[index]]);
-    onChange(data.filter((_, i) => i !== index));
-  };
-
-  const undoRemove = () => {
-    const lastRemoved = removedStack[removedStack.length - 1];
-    if (!lastRemoved) return;
-    onChange([...data, lastRemoved]);
-    setRemovedStack((prev) => prev.slice(0, -1));
-  };
-
-  const addRow = () => {
-    onChange([...data, { label: "", value: "" }]);
+    try {
+      await deleteStorageObject({ publicUrl: currentValue });
+      if (preview.startsWith("blob:")) {
+        URL.revokeObjectURL(preview);
+      }
+      setPreview("");
+      onChange("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to delete thumbnail"
+      );
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Course Sections</CardTitle>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={undoRemove}
-            disabled={removedStack.length === 0}
-          >
-            <Undo2 className="mr-2 h-4 w-4" />
-            Undo
-          </Button>
-          <Button type="button" variant="outline" size="sm" onClick={addRow}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {data.map((row, index) => (
-          <div key={index} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2">
-            <Input
-              value={row.label}
-              placeholder="Label (e.g. চ্যাপ্টার সংখ্যা)"
-              onChange={(e) => updateField(index, "label", e.target.value)}
+    <div className="space-y-3">
+      <Label className="text-xs font-medium uppercase text-muted-foreground">
+        {label}
+      </Label>
+      {description && (
+        <p className="text-sm text-muted-foreground">{description}</p>
+      )}
+
+      <div className="space-y-3 rounded-lg border border-border/70 bg-background/40 p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <label className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border border-dashed border-border/70 bg-background/60 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground sm:h-40 sm:w-56">
+            {preview ? (
+              <img
+                src={preview}
+                alt={label}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <>
+                <ImagePlus className="h-6 w-6" />
+                <span className="text-xs">Upload image</span>
+              </>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
             />
-            <Input
-              value={row.value}
-              placeholder="Value (e.g. 17 টি)"
-              onChange={(e) => updateField(index, "value", e.target.value)}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => removeRow(index)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+          </label>
+
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <ImagePlus className="mr-2 h-4 w-4" />
+                )}
+                {preview ? "Replace image" : "Upload image"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleClear}
+                disabled={!preview || uploading}
+              >
+                Clear
+              </Button>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              {preview
+                ? "The uploaded URL is stored automatically."
+                : "Select a square or 16:9 image. It will upload immediately."}
+            </p>
+
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
-        ))}
-        {data.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No sections yet. Add a row to start.
-          </p>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -340,11 +313,6 @@ export function CourseMetadataForm({
 }: CourseMetadataFormProps) {
   return (
     <div className="space-y-6">
-      <SectionsEditor
-        data={chips.sections}
-        onChange={(sections) => onChipsChange({ ...chips, sections })}
-      />
-
       <Card>
         <CardHeader>
           <CardTitle>Enrollment Details</CardTitle>
@@ -401,13 +369,6 @@ export function CourseMetadataForm({
         data={chips.socials}
         valuePlaceholder="Value"
         onChange={(socials) => onChipsChange({ ...chips, socials })}
-      />
-
-      <ObjectEditor
-        title="Thumbnails"
-        data={chips.thumbnails}
-        valuePlaceholder="URL"
-        onChange={(thumbnails) => onChipsChange({ ...chips, thumbnails })}
       />
 
       <Card>

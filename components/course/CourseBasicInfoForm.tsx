@@ -1,11 +1,14 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import {
   UseFormRegister,
   UseFormSetValue,
   UseFormWatch,
   FieldErrors,
 } from "react-hook-form";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { FileUp, Link2, Loader2, X } from "lucide-react";
+import {
+  deleteStorageObject,
+  uploadImageToS3,
+} from "@/lib/s3-upload";
 import type { CourseFormData } from "@/types/course.types";
 
 interface CourseBasicInfoFormProps {
@@ -35,6 +44,115 @@ export function CourseBasicInfoForm({
 }: CourseBasicInfoFormProps) {
   const language = watch("language");
   const isLive = watch("is_live");
+  const courseOutline = watch("course_outline") || "";
+  const outlineFileInputRef = useRef<HTMLInputElement>(null);
+  const [outlineMode, setOutlineMode] = useState<"link" | "upload">("link");
+  const [outlineUploading, setOutlineUploading] = useState(false);
+
+  const storagePublicUrlBase = process.env.NEXT_PUBLIC_STORAGE_PUBLIC_URL_BASE;
+  const isStorageOutlineUrl = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed || !storagePublicUrlBase) return false;
+
+    try {
+      const current = new URL(trimmed);
+      const base = new URL(storagePublicUrlBase);
+      const basePath = base.pathname.endsWith("/")
+        ? base.pathname
+        : `${base.pathname}/`;
+
+      return (
+        current.origin === base.origin &&
+        (base.pathname === "/" ||
+          current.pathname === base.pathname ||
+          current.pathname.startsWith(basePath))
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    if (!courseOutline) return;
+    setOutlineMode(isStorageOutlineUrl(courseOutline) ? "upload" : "link");
+  }, [courseOutline]);
+
+  const clearOutlineFileInput = () => {
+    if (outlineFileInputRef.current) {
+      outlineFileInputRef.current.value = "";
+    }
+  };
+
+  const handleOutlineModeChange = async (nextMode: "link" | "upload") => {
+    if (nextMode === outlineMode) return;
+
+    const currentValue = courseOutline.trim();
+    setOutlineMode(nextMode);
+
+    if (nextMode === "upload") {
+      if (currentValue && isStorageOutlineUrl(currentValue)) {
+        try {
+          await deleteStorageObject({ publicUrl: currentValue });
+        } catch (error) {
+          console.error("Failed to delete previous course outline:", error);
+          toast.error("Could not remove the previous uploaded outline.");
+        }
+      }
+      setValue("course_outline", "", { shouldDirty: true, shouldValidate: true });
+      clearOutlineFileInput();
+      return;
+    }
+
+    if (currentValue && isStorageOutlineUrl(currentValue)) {
+      try {
+        await deleteStorageObject({ publicUrl: currentValue });
+      } catch (error) {
+        console.error("Failed to delete previous course outline:", error);
+        toast.error("Could not remove the uploaded outline.");
+      }
+    }
+
+    setValue("course_outline", "", { shouldDirty: true, shouldValidate: true });
+    clearOutlineFileInput();
+  };
+
+  const handleOutlineFileChange = async (
+    e: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const previousValue = courseOutline.trim();
+    setOutlineUploading(true);
+
+    try {
+      const uploadedUrl = await uploadImageToS3(file, {
+        purpose: "course-outline",
+      });
+      setValue("course_outline", uploadedUrl, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+
+      if (previousValue && isStorageOutlineUrl(previousValue) && previousValue !== uploadedUrl) {
+        try {
+          await deleteStorageObject({ publicUrl: previousValue });
+        } catch (error) {
+          console.error("Failed to delete previous course outline:", error);
+          toast.error("Uploaded the new outline, but could not delete the old one.");
+        }
+      }
+
+      setOutlineMode("upload");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to upload outline PDF"
+      );
+    } finally {
+      setOutlineUploading(false);
+      clearOutlineFileInput();
+    }
+  };
 
   return (
     <Card>
@@ -104,22 +222,100 @@ export function CourseBasicInfoForm({
 
         {/* Course Outline */}
         <div className="space-y-2">
-          <Label htmlFor="course_outline">Course Outline Link</Label>
-          <Input
-            id="course_outline"
-            {...register("course_outline", {
-              pattern: {
-                value: /^https?:\/\/.+/,
-                message: "Invalid URL format",
-              },
-            })}
-            placeholder="https://drive.google.com/file/d/..."
-            className={errors.course_outline ? "border-destructive" : ""}
-          />
-          {errors.course_outline && (
-            <p className="text-sm text-destructive">
-              {errors.course_outline.message}
-            </p>
+          <div className="flex items-center justify-between gap-3">
+            <Label>Course Outline</Label>
+            <div className="inline-flex rounded-lg border border-border/70 bg-background/60 p-1">
+              <Button
+                type="button"
+                variant={outlineMode === "link" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => handleOutlineModeChange("link")}
+                className="h-8"
+              >
+                <Link2 className="mr-2 h-4 w-4" />
+                Link
+              </Button>
+              <Button
+                type="button"
+                variant={outlineMode === "upload" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => handleOutlineModeChange("upload")}
+                className="h-8"
+              >
+                <FileUp className="mr-2 h-4 w-4" />
+                Upload PDF
+              </Button>
+            </div>
+          </div>
+
+          {outlineMode === "link" ? (
+            <div className="space-y-2">
+              <Input
+                id="course_outline"
+                {...register("course_outline", {
+                  pattern: {
+                    value: /^https?:\/\/.+/,
+                    message: "Invalid URL format",
+                  },
+                })}
+                placeholder="https://drive.google.com/file/d/..."
+                className={errors.course_outline ? "border-destructive" : ""}
+              />
+              {errors.course_outline && (
+                <p className="text-sm text-destructive">
+                  {errors.course_outline.message}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3 rounded-xl border border-dashed border-border/70 bg-background/40 p-4">
+              <input
+                ref={outlineFileInputRef}
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={handleOutlineFileChange}
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => outlineFileInputRef.current?.click()}
+                  disabled={outlineUploading}
+                >
+                  {outlineUploading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileUp className="mr-2 h-4 w-4" />
+                  )}
+                  {courseOutline ? "Replace PDF" : "Upload PDF"}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => handleOutlineModeChange("link")}
+                  disabled={outlineUploading}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Use link instead
+                </Button>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                {courseOutline
+                  ? isStorageOutlineUrl(courseOutline)
+                    ? "PDF uploaded. Replace it or switch back to a link."
+                    : "No PDF uploaded yet."
+                  : "Upload a PDF outline instead of pasting a link."}
+              </p>
+
+              {courseOutline && (
+                <p className="break-all text-sm text-muted-foreground">
+                  {courseOutline}
+                </p>
+              )}
+            </div>
           )}
         </div>
 

@@ -11,7 +11,7 @@ import {
 } from "@/hooks/useModules";
 import { encryptString, decryptString } from "@/lib/auth";
 import { useCourseStore } from "@/lib/stores/course-store";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Module, ModuleCategory } from "@/types";
 import { QuizBuilder, type QuizQuestion } from "./QuizBuilder";
@@ -68,9 +68,12 @@ interface QuizModuleFormProps {
  * Fully implemented with comprehensive QuizBuilder component
  */
 export function QuizModuleForm({ module }: QuizModuleFormProps) {
+  const router = useRouter();
   const params = useParams();
   const courseId = params?.courseId ? parseInt(params.courseId as string) : 0;
-  const { closeModuleEditor, editingModuleId, draftChanges } = useCourseStore();
+  const { editingModuleId, draftChanges } = useCourseStore();
+
+  const navigateBack = () => router.push(`/courses/${courseId}`);
 
   const chapterId =
     module?.chapter_id || (draftChanges.chapterId as number) || 0;
@@ -341,8 +344,7 @@ export function QuizModuleForm({ module }: QuizModuleFormProps) {
           quiz_attempt_limit: quizAttemptLimit,
           data: moduleDataPayload,
         });
-        closeModuleEditor();
-        toast.success("Quiz module saved successfully");
+        navigateBack();
       } else if (chapterId) {
         // data.description comes from BaseModuleForm
         await createModule.mutateAsync({
@@ -357,9 +359,8 @@ export function QuizModuleForm({ module }: QuizModuleFormProps) {
           quiz_attempt_limit: quizAttemptLimit,
           data: moduleDataPayload,
         });
-        closeModuleEditor();
+        navigateBack();
         useCourseStore.getState().clearDraft();
-        toast.success("Quiz module created successfully");
       } else {
         toast.error("Chapter ID is required");
       }
@@ -372,7 +373,7 @@ export function QuizModuleForm({ module }: QuizModuleFormProps) {
     <BaseModuleForm
       module={module}
       onSubmit={handleSubmit}
-      onCancel={closeModuleEditor}
+      onCancel={navigateBack}
     >
       <div className="space-y-4">
         {/* NEW: Quiz Time Limit */}

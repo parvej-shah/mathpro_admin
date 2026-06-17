@@ -25,7 +25,7 @@ they want it broken. Otherwise: **stop and flag, do not proceed.**
 
 ## Styling
 
-- This is **Tailwind v3.4 + webpack**, not the Frontend repo's Tailwind v4. Never carry over
+- This is **Tailwind v3.4** on the default Next.js bundler, not the Frontend repo's Tailwind v4. Never carry over
   Frontend-specific syntax (e.g. `bg-linear-to-*` gradient classes) — this repo uses
   `bg-gradient-to-{dir}`.
 - Design tokens are CSS custom properties in `oklch()` defined in `app/globals.css` —
@@ -57,7 +57,7 @@ they want it broken. Otherwise: **stop and flag, do not proceed.**
 
 ## Platform
 
-- This is **Next.js 16 (App Router, webpack build, `--webpack`)**, React 19, TypeScript
-  strict. Webpack is required for AWS SDK compatibility — never suggest switching to the
-  default Turbopack bundler.
+- This is **Next.js 16 (App Router)**, React 19, TypeScript strict. Use the repo's default
+  Next.js bundler setup — never reintroduce webpack-specific build flags unless the task
+  explicitly asks for them.
 - Never commit a change that fails `npm run type-check` (`tsc --noEmit`).

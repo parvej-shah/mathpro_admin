@@ -93,7 +93,6 @@ const ROUTE_ORDER: string[] = [
   "/faq-management",
   "/testimonial-management",
   "/coupon-management",
-  "/after-purchase-messages",
   "/payment-audit-log",
   "/routines",
   "/feedback-management",

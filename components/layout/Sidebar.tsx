@@ -84,7 +84,6 @@ const menuItems: MenuItem[] = [
   { href: "/faq-management", label: "FAQ", icon: CircleHelp, moderatorAllowed: true, permission: ROUTE_PERMISSIONS["/faq-management"] },
   { href: "/testimonial-management", label: "Testimonials", icon: Quote, moderatorAllowed: true, permission: ROUTE_PERMISSIONS["/testimonial-management"] },
   { href: "/coupon-management", label: "Coupon", icon: Ticket, adminOnly: true, permission: ROUTE_PERMISSIONS["/coupon-management"] },
-  { href: "/after-purchase-messages", label: "After Purchase Messages", icon: Mail, moderatorAllowed: true, permission: ROUTE_PERMISSIONS["/after-purchase-messages"] },
   { href: "/payment-audit-log", label: "Payment Audit Log", icon: CreditCard, adminOnly: true, permission: ROUTE_PERMISSIONS["/payment-audit-log"] },
   { href: "/routines", label: "Routine", icon: CalendarDays, moderatorAllowed: true, permission: ROUTE_PERMISSIONS["/routines"] },
   { href: "/feedback-management", label: "Feedback", icon: StarHalf, adminOnly: true, badge: "New", permission: ROUTE_PERMISSIONS["/feedback-management"] },
@@ -144,7 +143,6 @@ const menuGroups: MenuGroup[] = [
     items: [
       "/coupon-management",
       "/payment-audit-log",
-      "/after-purchase-messages",
     ],
   },
   {

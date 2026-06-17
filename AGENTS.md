@@ -13,15 +13,14 @@ enrollment/payment ops. Not student-facing. It is a **client** of the backend
 (`Math_Pro_backend`), which owns the API contract; this repo never owns data, only edits it
 through the API.
 
-- **Stack:** Next.js 16 (App Router, **webpack** build — `--webpack`, needed for AWS SDK
-  compatibility), React 19, TypeScript (strict), shadcn/ui (Radix + Tailwind v3.4),
+- **Stack:** Next.js 16 (App Router), React 19, TypeScript (strict), shadcn/ui (Radix + Tailwind v3.4),
   TanStack Query + Zustand, React Hook Form. Rich editors: **Lexical** (rich text) and
   **Monaco** (code); **dnd-kit** for drag-and-drop ordering.
-- **Run:** `npm run dev` → port **2026** (`next dev --webpack -p 2026`).
+- **Run:** `npm run dev` → port **2026** (`next dev -p 2026`).
 - **Verify:** `npm run type-check` (`tsc --noEmit`) **and** `npm run lint` (`next lint`).
   Format with `npm run format` (prettier).
 
-> Note: this is Tailwind **v3.4** and webpack — *different from the Frontend repo* (Tailwind
+> Note: this is Tailwind **v3.4** and the default Next.js bundler — *different from the Frontend repo* (Tailwind
 > v4, default bundler). Don't carry Frontend-specific class syntax (e.g. `bg-linear-to-*`)
 > over here. Match this repo's existing components.
 

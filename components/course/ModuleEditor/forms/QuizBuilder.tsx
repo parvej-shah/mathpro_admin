@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LexicalEditor } from "@/components/announcements/LexicalEditor";
+import { RichPreview } from "@/components/ui/rich-preview";
 import { extractTextFromHTML } from "@/lib/editors/latex-plugin";
 import { sanitizeHtmlContent } from "@/lib/helpers";
 import {
@@ -27,7 +28,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Plus, Trash2, X } from "lucide-react";
+import { GripVertical, ImageIcon, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 export interface QuizQuestion {
@@ -234,6 +235,12 @@ export function QuizBuilder({ questions, onChange }: QuizBuilderProps) {
   );
 }
 
+function cleanQuestionTitle(text: string): { clean: string; hasImage: boolean } {
+  const hasImage = /!\[.*?\]\(.*?\)/.test(text);
+  const clean = text.replace(/!\[.*?\]\(.*?\)/g, "").replace(/\s+/g, " ").trim();
+  return { clean, hasImage };
+}
+
 /**
  * Question Item in Sidebar (Sortable)
  */
@@ -288,8 +295,16 @@ function QuestionItem({
               <Badge variant="outline">Q{index + 1}</Badge>
               <Badge variant="secondary">{question.points} pts</Badge>
             </div>
-            <p className="text-sm font-medium line-clamp-2">
-              {question.question || "Untitled Question"}
+            <p className="text-sm font-medium line-clamp-2 flex items-center gap-1">
+              {(() => {
+                const { clean, hasImage } = cleanQuestionTitle(question.question);
+                return (
+                  <>
+                    {hasImage && <ImageIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                    {clean || (hasImage ? "Image Question" : "Untitled Question")}
+                  </>
+                );
+              })()}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {question.options.filter((o) => o.trim()).length} options
@@ -381,6 +396,7 @@ function QuestionEditor({
           <LexicalEditor
             key={`question-${question.id}`}
             initialHtml={questionHtml}
+            uploadPurpose="quiz-image"
             onChange={(html) => {
               setQuestionHtml(html);
               const sanitizedHtml = sanitizeHtmlContent(html);
@@ -392,6 +408,7 @@ function QuestionEditor({
             onTextChange={() => {}}
             placeholder="Enter question text (supports LaTeX: $x^2 + 5x + 6 = 0$)"
           />
+          <RichPreview html={questionHtml} label="Question Preview" className="mt-3" />
         </div>
 
         {/* Options */}
@@ -444,6 +461,7 @@ function QuestionEditor({
                       <LexicalEditor
                         key={`${question.id}-option-editor-${index}`}
                         initialHtml={question.options_html[index] || option || ""}
+                        uploadPurpose="quiz-image"
                         onChange={(html) => {
                           const sanitizedHtml = sanitizeHtmlContent(html);
                           const text = sanitizedHtml ? extractTextFromHTML(html) : "";
@@ -452,6 +470,7 @@ function QuestionEditor({
                         onTextChange={() => {}}
                         placeholder={`Enter option ${index + 1} text (supports LaTeX and rich text)`}
                       />
+                      <RichPreview html={question.options_html[index] || ""} label="Option Preview" className="mt-2" imgMaxHeight="[&_img]:max-h-32" />
                     </div>
                     {question.options.length > 2 && (
                       <Button
@@ -501,6 +520,7 @@ function QuestionEditor({
           <LexicalEditor
             key={`explanation-${question.id}`}
             initialHtml={explanationHtml}
+            uploadPurpose="quiz-image"
             onChange={(html) => {
               setExplanationHtml(html);
               const sanitizedHtml = sanitizeHtmlContent(html);
@@ -512,6 +532,7 @@ function QuestionEditor({
             onTextChange={() => {}}
             placeholder="Enter explanation (supports LaTeX and rich text)"
           />
+          <RichPreview html={explanationHtml} label="Explanation Preview" className="mt-3" />
         </div>
       </CardContent>
     </Card>

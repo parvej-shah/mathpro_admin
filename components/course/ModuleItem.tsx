@@ -11,7 +11,7 @@ import {
   FileType,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useCourseStore } from "@/lib/stores/course-store";
+import { useRouter } from "next/navigation";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Module, ModuleCategory } from "@/types";
@@ -47,9 +47,12 @@ const liveClassStatusConfig: Record<
  * Module Item Component
  * A single sortable module row with category icon and inline actions.
  */
-export function ModuleItem({ module, onDelete }: ModuleItemProps) {
-  const { openModuleEditor } = useCourseStore();
-  const category = (module.category || module.type) as ModuleCategory;
+export function ModuleItem({ module, courseId, onDelete }: ModuleItemProps) {
+  const router = useRouter();
+  const rawData = typeof module.data === "string"
+    ? (() => { try { return JSON.parse(module.data as string); } catch { return {}; } })()
+    : module.data;
+  const category = (module.category || module.type || rawData?.category) as ModuleCategory;
   const cfg = categoryConfig[category] || categoryConfig.TEXT;
   const CategoryIcon = cfg.icon;
   const liveClassStatus = module.live_status
@@ -168,7 +171,7 @@ export function ModuleItem({ module, onDelete }: ModuleItemProps) {
           size="icon"
           className="h-8 w-8"
           title="Edit module"
-          onClick={() => openModuleEditor(module.id)}
+          onClick={() => router.push(`/courses/${courseId}/modules/${module.id}/edit`)}
         >
           <Pencil className="h-4 w-4" />
         </Button>

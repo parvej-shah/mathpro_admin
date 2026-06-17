@@ -9,8 +9,10 @@ export type UploadPurpose =
   | "course-feedback-image"
   | "contest-thumbnail"
   | "announcement-attachment"
+  | "quiz-image"
   | "assignment-document"
   | "module-pdf"
+  | "course-outline"
   | "module-video-attachment"
   | "module-code-file"
   | "course-import"
@@ -28,6 +30,14 @@ interface PresignedUploadResponse {
     key: string;
     public_url: string;
     content_type: string;
+  };
+  error?: string;
+}
+
+interface DeleteUploadResponse {
+  success: boolean;
+  data?: {
+    key: string;
   };
   error?: string;
 }
@@ -100,6 +110,36 @@ export async function uploadImageToS3(
     console.error("Presigned upload error:", error);
     throw new Error(
       error instanceof Error ? error.message : "Failed to upload file"
+    );
+  }
+}
+
+interface DeleteOptions {
+  key?: string;
+  publicUrl?: string;
+}
+
+export async function deleteStorageObject(options: DeleteOptions): Promise<void> {
+  if (typeof window === "undefined") {
+    throw new Error("File deletion can only be done on client side");
+  }
+
+  try {
+    const response = await apiClient.post<DeleteUploadResponse>(
+      "/v2/admin/upload/delete",
+      {
+        key: options.key,
+        public_url: options.publicUrl,
+      }
+    );
+
+    if (!response.data.success) {
+      throw new Error(response.data.error || "Failed to delete file");
+    }
+  } catch (error) {
+    console.error("Storage delete error:", error);
+    throw new Error(
+      error instanceof Error ? error.message : "Failed to delete file"
     );
   }
 }

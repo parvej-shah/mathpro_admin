@@ -180,6 +180,40 @@ export function useUpdateTeacher() {
   });
 }
 
+function getTeacherDeleteErrorMessage(error: Error | AxiosError) {
+  const axiosErr = error instanceof AxiosError ? error : null;
+  const errData = axiosErr?.response?.data as
+    | { error?: unknown; message?: unknown }
+    | undefined;
+
+  const rawMessage =
+    (typeof errData?.error === "string" && errData.error) ||
+    (typeof errData?.message === "string" && errData.message) ||
+    (typeof error.message === "string" ? error.message : "");
+
+  if (
+    rawMessage.includes("still referenced from table") ||
+    rawMessage.includes("violates foreign key constraint") ||
+    rawMessage.includes("foreign key constraint") ||
+    rawMessage.includes("23503")
+  ) {
+    const tableMatch = rawMessage.match(/table\s+"([^"]+)"/i);
+    const referencedTable = tableMatch?.[1];
+
+    if (referencedTable === "book") {
+      return "Can't delete this teacher because one or more books were created by this account. Reassign those books or remove them first.";
+    }
+
+    if (referencedTable) {
+      return `Can't delete this teacher because related records still exist in "${referencedTable}". Remove or reassign them first.`;
+    }
+
+    return "Can't delete this teacher because related records still exist. Remove or reassign them first.";
+  }
+
+  return rawMessage || "Failed to delete teacher";
+}
+
 export function useDeleteTeacher() {
   const queryClient = useQueryClient();
 
@@ -190,14 +224,7 @@ export function useDeleteTeacher() {
       toast.success("Teacher deleted successfully");
     },
     onError: (error: Error | AxiosError) => {
-      const axiosErr = error instanceof AxiosError ? error : null;
-      const errData = axiosErr?.response?.data as { error?: unknown; message?: unknown } | undefined;
-      const message =
-        (typeof errData?.error === "string" && errData.error) ||
-        (typeof errData?.message === "string" && errData.message) ||
-        (typeof error.message === "string" && error.message) ||
-        "Failed to delete teacher";
-      toast.error(message);
+      toast.error(getTeacherDeleteErrorMessage(error));
     },
   });
 }

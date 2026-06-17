@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useCourseFullEnhanced,
@@ -20,7 +20,7 @@ import { useDeleteModule } from "@/hooks/useModules";
 import { createModule as createModuleService } from "@/services/module.service";
 import { CourseHeader } from "@/components/course/CourseHeader";
 import { ChapterList } from "@/components/course/ChapterList";
-import { ModuleEditor } from "@/components/course/ModuleEditor/ModuleEditor";
+// ModuleEditor is now a dedicated page at /courses/[courseId]/modules/...
 import { ImportDialog } from "@/components/course/BulkImport/ImportDialog";
 import { ModuleSerializerModal } from "@/components/course/ModuleSerializerModal";
 import { useCourseStore } from "@/lib/stores/course-store";
@@ -140,8 +140,8 @@ export default function CourseViewPage() {
   }, [editingChapter, isEditChapterDialogOpen]);
 
   // Store
-  const { saveStatus, setSaveStatus, openModuleEditor, setDraft } =
-    useCourseStore();
+  const { saveStatus, setSaveStatus } = useCourseStore();
+  const router = useRouter();
 
   // Drag and drop
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -569,10 +569,7 @@ export default function CourseViewPage() {
               courseId={course.id}
               onAddModule={(chapterId) => {
                 setActiveChapterId(chapterId);
-                // Open module editor for new module creation
-                openModuleEditor(null);
-                // Store chapterId in draft for module creation
-                setDraft("chapterId", chapterId);
+                router.push(`/courses/${courseId}/modules/new?chapterId=${chapterId}`);
               }}
               onEditChapter={(chapterId) => {
                 setEditingChapterId(chapterId);
@@ -788,12 +785,6 @@ export default function CourseViewPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* New Module Dialog - Replaced by ModuleEditor modal */}
-      {/* Keeping state for now but dialog is handled by ModuleEditor */}
-
-      {/* Module Editor Modal */}
-      <ModuleEditor />
 
       {/* Import Dialog */}
       <ImportDialog

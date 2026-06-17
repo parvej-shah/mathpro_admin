@@ -35,6 +35,7 @@ import { TRANSFORMERS } from "@lexical/markdown";
 import { ToolbarPlugin } from "./LexicalToolbar";
 import { LaTeXPlugin } from "@/lib/editors/latex-plugin";
 import { MarkdownPastePlugin } from "@/lib/editors/markdown-paste-plugin";
+import type { UploadPurpose } from "@/lib/s3-upload";
 
 const theme = {
   paragraph: "mb-2",
@@ -89,6 +90,7 @@ interface LexicalEditorProps {
   onChange: (html: string) => void;
   onTextChange?: (text: string) => void;
   placeholder?: string;
+  uploadPurpose?: UploadPurpose;
 }
 
 const initialConfig = {
@@ -117,6 +119,7 @@ export function LexicalEditor({
   onChange,
   onTextChange,
   placeholder = "Enter announcement description...",
+  uploadPurpose = "announcement-attachment",
 }: LexicalEditorProps) {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -133,7 +136,7 @@ export function LexicalEditor({
   return (
     <LexicalComposer initialConfig={initialConfig}>
       <div className="border rounded-md overflow-hidden">
-        <ToolbarPlugin />
+        <ToolbarPlugin uploadPurpose={uploadPurpose} />
         <div className="relative min-h-[200px] bg-background">
           <RichTextPlugin
             contentEditable={

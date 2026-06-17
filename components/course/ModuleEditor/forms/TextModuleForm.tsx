@@ -7,7 +7,7 @@ import {
   useUpdateModuleEnhanced,
 } from "@/hooks/useModules";
 import { useCourseStore } from "@/lib/stores/course-store";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Module, ModuleCategory } from "@/types";
 
@@ -20,9 +20,12 @@ interface TextModuleFormProps {
  * For TEXT modules, the description field in BaseModuleForm IS the content
  */
 export function TextModuleForm({ module }: TextModuleFormProps) {
+  const router = useRouter();
   const params = useParams();
   const courseId = params?.courseId ? parseInt(params.courseId as string) : 0;
-  const { closeModuleEditor, editingModuleId, draftChanges } = useCourseStore();
+  const { editingModuleId, draftChanges } = useCourseStore();
+
+  const navigateBack = () => router.push(`/courses/${courseId}`);
 
   // Get chapter ID from module or draft (for new modules)
   const chapterId =
@@ -54,8 +57,7 @@ export function TextModuleForm({ module }: TextModuleFormProps) {
           ...data,
           category: category as ModuleCategory,
         });
-        closeModuleEditor();
-        toast.success("Text module saved successfully");
+        navigateBack();
       } else if (chapterId) {
         // Create new module
         // data.description comes from BaseModuleForm
@@ -68,9 +70,8 @@ export function TextModuleForm({ module }: TextModuleFormProps) {
           is_live: data.is_live || false,
           is_free: data.is_free || false,
         });
-        closeModuleEditor();
+        navigateBack();
         useCourseStore.getState().clearDraft();
-        toast.success("Text module created successfully");
       } else {
         toast.error("Chapter ID is required to create a module");
       }
@@ -85,7 +86,7 @@ export function TextModuleForm({ module }: TextModuleFormProps) {
     <BaseModuleForm
       module={module}
       onSubmit={handleSubmit}
-      onCancel={closeModuleEditor}
+      onCancel={navigateBack}
     >
       {/* Text modules only need the description field (which is already in BaseModuleForm) */}
       {/* No additional content fields needed */}

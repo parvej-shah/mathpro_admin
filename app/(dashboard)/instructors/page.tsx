@@ -42,7 +42,6 @@ const SEARCH_DEBOUNCE_MS = 350;
 const PAGE_SIZE = 20;
 
 type StatusFilter = "all" | "active" | "inactive";
-type CategoryFilter = "all" | "instructor" | "teacher";
 type SortOption = "name-asc" | "name-desc" | "created-desc" | "created-asc";
 
 export default function TeacherDashboardPage() {
@@ -55,7 +54,6 @@ export default function TeacherDashboardPage() {
   const [inlineSearch, setInlineSearch] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [sortOption, setSortOption] = useState<SortOption>("created-desc");
   const [page, setPage] = useState(1);
 
@@ -108,7 +106,6 @@ export default function TeacherDashboardPage() {
 
     if (statusFilter === "active") result = result.filter((t) => t.isActive !== false);
     if (statusFilter === "inactive") result = result.filter((t) => t.isActive === false);
-    if (categoryFilter !== "all") result = result.filter((t) => t.category === categoryFilter);
 
     const [field, dir] = sortOption.split("-") as [string, string];
     result.sort((a, b) => {
@@ -123,7 +120,7 @@ export default function TeacherDashboardPage() {
     });
 
     return result;
-  }, [rawTeachers, appliedSearch, statusFilter, categoryFilter, sortOption]);
+  }, [rawTeachers, appliedSearch, statusFilter, sortOption]);
 
   // Pagination
   const total = filteredTeachers.length;
@@ -164,7 +161,6 @@ export default function TeacherDashboardPage() {
     setInlineSearch("");
     setAppliedSearch("");
     setStatusFilter("all");
-    setCategoryFilter("all");
     setSortOption("created-desc");
     setPage(1);
   };
@@ -172,13 +168,11 @@ export default function TeacherDashboardPage() {
   const hasActiveFilters =
     appliedSearch !== "" ||
     statusFilter !== "all" ||
-    categoryFilter !== "all" ||
     sortOption !== "created-desc";
 
   const activeFilterCount = [
     appliedSearch !== "",
     statusFilter !== "all",
-    categoryFilter !== "all",
     sortOption !== "created-desc",
   ].filter(Boolean).length;
 
@@ -206,9 +200,9 @@ export default function TeacherDashboardPage() {
       />
 
       {/* Search + filters row */}
-      <div className="mb-6 flex flex-col gap-3 xl:flex-row xl:items-center">
+      <div className="mb-6 flex flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
         {/* Search */}
-        <div className="relative w-full xl:max-w-md xl:flex-1">
+        <div className="relative w-full xl:max-w-md xl:flex-1 xl:min-w-0">
           <FontAwesomeIcon
             icon={faMagnifyingGlass}
             className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
@@ -224,7 +218,7 @@ export default function TeacherDashboardPage() {
         </div>
 
         {/* Filter pills + sort */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 xl:flex-nowrap">
           {/* Status toggle */}
           <div className="flex rounded-full border border-border/80 bg-muted/30 p-1">
             {(["all", "active", "inactive"] as const).map((status) => (
@@ -247,28 +241,6 @@ export default function TeacherDashboardPage() {
             ))}
           </div>
 
-          {/* Category toggle */}
-          <div className="flex rounded-full border border-border/80 bg-muted/30 p-1">
-            {(["all", "instructor", "teacher"] as const).map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => {
-                  setCategoryFilter(cat);
-                  setPage(1);
-                }}
-                className={cn(
-                  "rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors capitalize",
-                  categoryFilter === cat
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {cat === "all" ? "All" : cat}
-              </button>
-            ))}
-          </div>
-
           {/* Sort */}
           <Select
             value={sortOption}
@@ -277,7 +249,7 @@ export default function TeacherDashboardPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-11 w-180px rounded-full border-border/80 bg-muted/30">
+            <SelectTrigger className="h-11 w-[180px] shrink-0 rounded-full border-border/80 bg-muted/30">
               <SelectValue placeholder="Sort" />
             </SelectTrigger>
             <SelectContent>

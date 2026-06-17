@@ -18,7 +18,7 @@ import {
 } from "@/hooks/useModules";
 import { uploadImageToS3 } from "@/lib/s3-upload";
 import { useCourseStore } from "@/lib/stores/course-store";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Module, ModuleCategory } from "@/types";
 
@@ -31,9 +31,12 @@ interface PDFModuleFormProps {
  * Enhanced with dual upload options: S3 or Google Drive
  */
 export function PDFModuleForm({ module }: PDFModuleFormProps) {
+  const router = useRouter();
   const params = useParams();
   const courseId = params?.courseId ? parseInt(params.courseId as string) : 0;
-  const { closeModuleEditor, editingModuleId, draftChanges } = useCourseStore();
+  const { editingModuleId, draftChanges } = useCourseStore();
+
+  const navigateBack = () => router.push(`/courses/${courseId}`);
 
   const chapterId =
     module?.chapter_id || (draftChanges.chapterId as number) || 0;
@@ -171,8 +174,7 @@ export function PDFModuleForm({ module }: PDFModuleFormProps) {
           category: category as ModuleCategory,
           data: moduleDataPayload,
         });
-        closeModuleEditor();
-        toast.success("PDF module saved successfully");
+        navigateBack();
       } else if (chapterId) {
         // Use legacy API for creates
         // data.description comes from BaseModuleForm
@@ -186,9 +188,8 @@ export function PDFModuleForm({ module }: PDFModuleFormProps) {
           is_free: data.is_free || false,
           data: moduleDataPayload,
         });
-        closeModuleEditor();
+        navigateBack();
         useCourseStore.getState().clearDraft();
-        toast.success("PDF module created successfully");
       } else {
         toast.error("Chapter ID is required");
       }
@@ -201,7 +202,7 @@ export function PDFModuleForm({ module }: PDFModuleFormProps) {
     <BaseModuleForm
       module={module}
       onSubmit={handleSubmit}
-      onCancel={closeModuleEditor}
+      onCancel={navigateBack}
     >
       <div className="space-y-4">
         {/* PDF Source Selection */}
@@ -262,7 +263,7 @@ export function PDFModuleForm({ module }: PDFModuleFormProps) {
             <Label htmlFor="pdf-drive-link">Google Drive Public Link *</Label>
             <Input
               id="pdf-drive-link"
-              value={pdfUrl}
+              value={pdfUrl ?? ""}
               onChange={(e) => setPdfUrl(e.target.value)}
               placeholder="Paste Google Drive public link here"
               required
