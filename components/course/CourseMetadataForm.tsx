@@ -92,11 +92,14 @@ export function ThumbnailUploadField({
   const [preview, setPreview] = useState(value);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasLocalPreview, setHasLocalPreview] = useState(false);
 
   useEffect(() => {
-    setPreview(value);
+    if (!hasLocalPreview) {
+      setPreview(value);
+    }
     setError(null);
-  }, [value]);
+  }, [hasLocalPreview, value]);
 
   useEffect(() => {
     return () => {
@@ -106,6 +109,14 @@ export function ThumbnailUploadField({
     };
   }, [preview]);
 
+  const canLoadImage = (src: string) =>
+    new Promise<boolean>((resolve) => {
+      const image = new window.Image();
+      image.onload = () => resolve(true);
+      image.onerror = () => resolve(false);
+      image.src = src;
+    });
+
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -114,6 +125,7 @@ export function ThumbnailUploadField({
     const nextPreview = URL.createObjectURL(file);
     setError(null);
     setUploading(true);
+    setHasLocalPreview(true);
     setPreview(nextPreview);
 
     try {
@@ -121,7 +133,17 @@ export function ThumbnailUploadField({
         purpose: "course-thumbnail",
       });
       onChange(uploadedUrl);
-      setPreview(uploadedUrl);
+
+      const remoteImageLoaded = await canLoadImage(uploadedUrl);
+      if (remoteImageLoaded) {
+        URL.revokeObjectURL(nextPreview);
+        setHasLocalPreview(false);
+        setPreview(uploadedUrl);
+      } else {
+        toast.warning(
+          "Image uploaded, but the public URL is not reachable yet. The local preview will stay visible for now."
+        );
+      }
 
       if (previousValue && previousValue !== uploadedUrl) {
         try {
@@ -133,6 +155,7 @@ export function ThumbnailUploadField({
       }
     } catch (err) {
       URL.revokeObjectURL(nextPreview);
+      setHasLocalPreview(false);
       setPreview(value);
       setError(
         err instanceof Error ? err.message : "Failed to upload thumbnail"
@@ -149,6 +172,7 @@ export function ThumbnailUploadField({
       if (preview.startsWith("blob:")) {
         URL.revokeObjectURL(preview);
       }
+      setHasLocalPreview(false);
       setPreview("");
       setError(null);
       onChange("");
@@ -166,6 +190,7 @@ export function ThumbnailUploadField({
       if (preview.startsWith("blob:")) {
         URL.revokeObjectURL(preview);
       }
+      setHasLocalPreview(false);
       setPreview("");
       onChange("");
       if (fileInputRef.current) {

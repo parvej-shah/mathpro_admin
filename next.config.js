@@ -33,6 +33,21 @@ const nextConfig = {
         : []),
       {
         protocol: "https",
+        hostname: "*.r2.dev",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.r2.de",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.r2.cloudflarestorage.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "mathpromedia.s3.ap-south-1.amazonaws.com",
         pathname: "/**",
       },
