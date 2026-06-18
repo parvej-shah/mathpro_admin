@@ -5,11 +5,14 @@ import type { NextRequest } from "next/server";
 // project root (or src/). This was previously at app/middleware.ts, so it never
 // executed — auth gating fell entirely to the client. Now it runs as the primary gate.
 export function proxy(request: NextRequest) {
-  // Public routes that don't require authentication
+  // Public routes that don't require authentication.
+  // "/" must be public so the SSO #token hash hand-off can land: the hash is
+  // invisible to the server, so client JS (captureTokenFromUrl) must run first
+  // to persist the cookie before any server-side gate kicks in.
   const publicRoutes = ["/login"];
-  const isPublicRoute = publicRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
+  const isPublicRoute =
+    request.nextUrl.pathname === "/" ||
+    publicRoutes.some((route) => request.nextUrl.pathname.startsWith(route));
 
   // Check for token in cookies or headers (for SSR)
   // For client-side, we'll handle in components
