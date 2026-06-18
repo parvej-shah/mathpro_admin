@@ -130,7 +130,9 @@ export function logout(): void {
   // Clear the shared cross-subdomain cookie (and any host-only fallback).
   document.cookie = `token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${AUTH_COOKIE_DOMAIN};`;
   document.cookie = `token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-  window.location.href = getFrontendLoginUrl(`${window.location.origin}/`);
+  const loginUrl = getFrontendLoginUrl(`${window.location.origin}/`);
+  const sep = loginUrl.includes("?") ? "&" : "?";
+  window.location.href = `${loginUrl}${sep}force_logout=1`;
 }
 
 /**
