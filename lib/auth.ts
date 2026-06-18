@@ -18,6 +18,43 @@ export function getFrontendLoginUrl(returnTo?: string): string {
   return `${FRONTEND_AUTH_URL}/auth/login?redirect=${encodeURIComponent(back)}`;
 }
 
+// Loop guard: the admin and Frontend live on different origins (no shared
+// cookie on *.onrender.com), so a stale token on one side can ping-pong the
+// user between login redirects forever. We allow at most one auto-redirect to
+// the Frontend login per short window; a second attempt within it means the
+// hand-off failed, so we stop and surface it instead of looping.
+const REDIRECT_GUARD_KEY = "mp_admin_login_redirect_at";
+const REDIRECT_GUARD_WINDOW_MS = 10_000;
+
+/** True if we just bounced to login and came back still unauthenticated. */
+export function isLoginRedirectLooping(): boolean {
+  if (typeof window === "undefined") return false;
+  const last = Number(sessionStorage.getItem(REDIRECT_GUARD_KEY) || 0);
+  return last > 0 && Date.now() - last < REDIRECT_GUARD_WINDOW_MS;
+}
+
+/** Clear the loop guard once a valid session is established. */
+export function clearLoginRedirectGuard(): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem(REDIRECT_GUARD_KEY);
+}
+
+/**
+ * Send an unauthenticated visitor to the centralized Frontend login. Records a
+ * timestamp so a return trip that is still unauthenticated does not loop. Pass
+ * `forceLogout` when tearing down a real session so the Frontend also drops its
+ * own (cross-origin) token rather than bouncing the user straight back.
+ */
+export function redirectToFrontendLogin(forceLogout = false): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(REDIRECT_GUARD_KEY, String(Date.now()));
+  let url = getFrontendLoginUrl(`${window.location.origin}/`);
+  if (forceLogout) {
+    url += (url.includes("?") ? "&" : "?") + "force_logout=1";
+  }
+  window.location.href = url;
+}
+
 function canUseCookieDomain(): boolean {
   if (typeof window === "undefined") return false;
   const host = window.location.hostname;
@@ -130,9 +167,7 @@ export function logout(): void {
   // Clear the shared cross-subdomain cookie (and any host-only fallback).
   document.cookie = `token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${AUTH_COOKIE_DOMAIN};`;
   document.cookie = `token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-  const loginUrl = getFrontendLoginUrl(`${window.location.origin}/`);
-  const sep = loginUrl.includes("?") ? "&" : "?";
-  window.location.href = `${loginUrl}${sep}force_logout=1`;
+  redirectToFrontendLogin(true);
 }
 
 /**
