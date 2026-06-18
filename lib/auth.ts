@@ -41,11 +41,18 @@ export function clearLoginRedirectGuard(): void {
 
 /**
  * Send an unauthenticated visitor to the centralized Frontend login. Records a
- * timestamp so a return trip that is still unauthenticated does not loop. Pass
- * `forceLogout` when tearing down a real session so the Frontend also drops its
- * own (cross-origin) token rather than bouncing the user straight back.
+ * timestamp so a return trip that is still unauthenticated does not loop.
+ *
+ * `forceLogout` defaults to true: the Frontend and admin live on different
+ * origins (no shared cookie on *.onrender.com / *.vercel.app), so a *student*
+ * already logged into the Frontend would otherwise be auto-redirected to the
+ * Frontend dashboard and never reach the admin login — stranding them with no
+ * way in short of a manual Frontend logout. Forcing the Frontend to drop its
+ * token first means the login form always renders, so the user can sign in with
+ * an admin account. Pass false only if you explicitly want to honor an existing
+ * Frontend session.
  */
-export function redirectToFrontendLogin(forceLogout = false): void {
+export function redirectToFrontendLogin(forceLogout = true): void {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(REDIRECT_GUARD_KEY, String(Date.now()));
   let url = getFrontendLoginUrl(`${window.location.origin}/`);
