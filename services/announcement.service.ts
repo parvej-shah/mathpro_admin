@@ -9,7 +9,7 @@ export interface Announcement {
   description: string;
   user_sender_type?: number; // 3 = Students, 2 = Teachers, -1 = Everyone
   user_type?: number; // Alias for user_sender_type
-  sent_methods?: string[]; // ["email", "sms", "notification"]
+  sent_methods?: string[]; // ["notification"]
   email_is_sent?: boolean;
   sms_is_sent?: boolean;
   notification_is_sent?: boolean;
@@ -22,7 +22,7 @@ export interface CreateAnnouncementData {
   subject: string;
   description: string;
   user_sender_type: number; // 3 = Students, 2 = Teachers, -1 = Everyone
-  sent_methods: string[]; // ["email", "sms", "notification"]
+  sent_methods: string[]; // ["notification"]
   [key: string]: unknown;
 }
 

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// Next 16 renamed the middleware convention to `proxy` and only runs it from the
+// project root (or src/). This was previously at app/middleware.ts, so it never
+// executed — auth gating fell entirely to the client. Now it runs as the primary gate.
 export function proxy(request: NextRequest) {
   // Public routes that don't require authentication
   const publicRoutes = ["/login"];
@@ -17,10 +20,15 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // If no token and not public route, redirect to login
-  // Note: This is basic check. Full auth check happens client-side
+  // If no token and not public route, bounce to the centralized Frontend login,
+  // which authenticates and redirects back here with the token.
+  // Note: basic check; full auth check happens client-side (AuthContext).
   if (!token && !isPublicRoute) {
-    const loginUrl = new URL("/login", request.url);
+    const frontendAuthUrl =
+      process.env.NEXT_PUBLIC_FRONTEND_AUTH_URL || "https://www.mathpro.academy";
+    const returnTo = request.nextUrl.origin + request.nextUrl.pathname + request.nextUrl.search;
+    const loginUrl = new URL("/auth/login", frontendAuthUrl);
+    loginUrl.searchParams.set("redirect", returnTo);
     return NextResponse.redirect(loginUrl);
   }
 

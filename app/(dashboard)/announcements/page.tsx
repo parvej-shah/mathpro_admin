@@ -73,7 +73,7 @@ export default function AnnouncementsPage() {
         const q = searchQuery.toLowerCase();
         if (!a.subject.toLowerCase().includes(q)) return false;
       }
-      const isSent = a.email_is_sent || a.notification_is_sent;
+      const isSent = !!a.notification_is_sent;
       if (status === "sent" && !isSent) return false;
       if (status === "draft" && isSent) return false;
       return true;

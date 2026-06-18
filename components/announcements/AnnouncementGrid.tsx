@@ -3,7 +3,6 @@
 import { format } from "date-fns";
 import {
   Send,
-  Mail,
   Bell,
   Trash2,
   Megaphone,
@@ -133,8 +132,7 @@ function AnnouncementRow({
   const recipient = getRecipient(recipientType);
   const RecipientIcon = recipient.icon;
 
-  const isSent = announcement.email_is_sent || announcement.notification_is_sent;
-  const emailSent = !!announcement.email_is_sent;
+  const isSent = !!announcement.notification_is_sent;
   const notifSent = !!announcement.notification_is_sent;
   const preview = stripHtml(announcement.description || "").slice(0, 180);
 
@@ -207,22 +205,13 @@ function AnnouncementRow({
               </span>
             )}
 
-            {emailSent && (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 px-2.5 py-1"
-                title="Email sent"
-              >
-                <Mail className="h-3.5 w-3.5" />
-                Email
-              </span>
-            )}
             {notifSent && (
               <span
                 className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 px-2.5 py-1"
                 title="Notification sent"
               >
                 <Bell className="h-3.5 w-3.5" />
-                Push
+                Web
               </span>
             )}
 

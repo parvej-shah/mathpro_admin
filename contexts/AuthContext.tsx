@@ -7,7 +7,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { getDecodedToken, isLoggedIn, logout as logoutUser } from "@/lib/auth";
+import { getDecodedToken, isLoggedIn, logout as logoutUser, captureTokenFromUrl } from "@/lib/auth";
 import type { DecodedToken } from "@/lib/auth";
 
 interface AuthContextType {
@@ -25,6 +25,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refreshUser = () => {
+    // Adopt a token handed over by the Frontend login (#token hash) or the
+    // shared cross-subdomain cookie before evaluating auth state.
+    captureTokenFromUrl();
     if (isLoggedIn()) {
       const decoded = getDecodedToken();
       setUser(decoded);

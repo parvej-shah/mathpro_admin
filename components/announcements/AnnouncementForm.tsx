@@ -15,18 +15,12 @@ import {
 import { LexicalEditor } from "./LexicalEditor";
 import {
   ArrowLeft,
-  Bell,
-  Mail,
   Megaphone,
   PencilLine,
   Send,
-  Users,
-  GraduationCap,
-  Globe2,
   BookOpen,
   Loader2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { sanitizeHtmlContent } from "@/lib/helpers";
 import type {
   Announcement,
@@ -52,18 +46,6 @@ interface AnnouncementFormProps {
   redirectTo?: string;
 }
 
-type Recipient = "3" | "2" | "-1";
-
-const recipientOptions: Array<{
-  value: Recipient;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-}> = [
-  { value: "3", label: "Students", icon: GraduationCap },
-  { value: "2", label: "Teachers", icon: Users },
-  { value: "-1", label: "Everyone", icon: Globe2 },
-];
-
 export function AnnouncementForm({
   courses,
   announcement,
@@ -79,31 +61,16 @@ export function AnnouncementForm({
   const [courseId, setCourseId] = useState<string>("");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
-  const [recipient, setRecipient] = useState<Recipient>("3");
-  const [sendEmail, setSendEmail] = useState(false);
-  const [sendNotification, setSendNotification] = useState(false);
 
   useEffect(() => {
     if (announcement) {
       setCourseId(announcement.course_id?.toString() || "");
       setSubject(announcement.subject || "");
       setDescription(announcement.description || "");
-      setRecipient(
-        (
-          (announcement.user_sender_type ??
-            announcement.user_type ??
-            3) as number
-        ).toString() as Recipient
-      );
-      setSendEmail(!!announcement.email_is_sent);
-      setSendNotification(!!announcement.notification_is_sent);
     } else {
       setCourseId(courses.length > 0 ? courses[0].id.toString() : "");
       setSubject("");
       setDescription("");
-      setRecipient("3");
-      setSendEmail(false);
-      setSendNotification(false);
     }
   }, [announcement, courses]);
 
@@ -111,20 +78,16 @@ export function AnnouncementForm({
   const subjectValid = subject.trim().length > 0;
   const descriptionValid = sanitized.length > 0;
   const courseValid = !!courseId;
-  const channelsValid = sendEmail || sendNotification;
-  const isValid = courseValid && subjectValid && descriptionValid && channelsValid;
+  const isValid = courseValid && subjectValid && descriptionValid;
 
   const buildPayload = () => {
-    const methods: string[] = [];
-    if (sendEmail) methods.push("email");
-    if (sendNotification) methods.push("notification");
     return {
       courseId: parseInt(courseId, 10),
       announcementData: {
         subject: subject.trim(),
         description: sanitized,
-        user_sender_type: parseInt(recipient, 10),
-        sent_methods: methods,
+        user_sender_type: 3,
+        sent_methods: ["notification"],
       } as CreateAnnouncementData,
     };
   };
@@ -281,63 +244,6 @@ export function AnnouncementForm({
               />
             </div>
 
-            {/* Recipient segmented */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Send to
-              </Label>
-              <div className="inline-flex w-full rounded-xl border bg-muted/30 p-1">
-                {recipientOptions.map((opt) => {
-                  const Icon = opt.icon;
-                  const active = recipient === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setRecipient(opt.value)}
-                      className={cn(
-                        "flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-lg text-sm transition-colors",
-                        active
-                          ? "bg-background text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Delivery channels */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Channels
-              </Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <ChannelToggle
-                  icon={Mail}
-                  label="Email"
-                  description="Send via email"
-                  active={sendEmail}
-                  onToggle={() => setSendEmail((v) => !v)}
-                />
-                <ChannelToggle
-                  icon={Bell}
-                  label="Push"
-                  description="In-app notification"
-                  active={sendNotification}
-                  onToggle={() => setSendNotification((v) => !v)}
-                />
-              </div>
-              {!channelsValid && (
-                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                  Pick at least one channel to deliver.
-                </p>
-              )}
-            </div>
-
             {/* Description */}
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -358,7 +264,7 @@ export function AnnouncementForm({
             <span>
               {isValid
                 ? "Ready to send."
-                : "Fill in subject, message and at least one channel."}
+                : "Fill in subject and message."}
             </span>
             <span className="hidden sm:inline">
               {isEdit ? "Edits apply on send" : "Sends immediately"}
@@ -367,70 +273,5 @@ export function AnnouncementForm({
         </div>
       </form>
     </div>
-  );
-}
-
-function ChannelToggle({
-  icon: Icon,
-  label,
-  description,
-  active,
-  onToggle,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  description: string;
-  active: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className={cn(
-        "flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all",
-        active
-          ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
-          : "hover:bg-muted/50"
-      )}
-    >
-      <span
-        className={cn(
-          "h-10 w-10 rounded-lg flex items-center justify-center transition-colors",
-          active
-            ? "bg-primary/15 text-primary"
-            : "bg-muted text-muted-foreground"
-        )}
-      >
-        <Icon className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium leading-none">{label}</div>
-        <div className="text-xs text-muted-foreground mt-1">{description}</div>
-      </div>
-      <span
-        className={cn(
-          "h-5 w-5 rounded-md border flex items-center justify-center transition-colors",
-          active
-            ? "bg-primary border-primary text-primary-foreground"
-            : "border-muted-foreground/30"
-        )}
-      >
-        {active && (
-          <svg
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-3.5 w-3.5"
-            aria-hidden
-          >
-            <path
-              fillRule="evenodd"
-              d="M16.704 5.296a1 1 0 010 1.408l-7.5 7.5a1 1 0 01-1.408 0l-3.5-3.5a1 1 0 011.408-1.408L8.5 12.092l6.796-6.796a1 1 0 011.408 0z"
-              clipRule="evenodd"
-            />
-          </svg>
-        )}
-      </span>
-    </button>
   );
 }
