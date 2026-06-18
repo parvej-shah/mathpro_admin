@@ -26,7 +26,8 @@ export function proxy(request: NextRequest) {
   if (!token && !isPublicRoute) {
     const frontendAuthUrl =
       process.env.NEXT_PUBLIC_FRONTEND_AUTH_URL || "https://www.mathpro.academy";
-    const returnTo = request.nextUrl.origin + request.nextUrl.pathname + request.nextUrl.search;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+    const returnTo = appUrl + request.nextUrl.pathname + request.nextUrl.search;
     const loginUrl = new URL("/auth/login", frontendAuthUrl);
     loginUrl.searchParams.set("redirect", returnTo);
     return NextResponse.redirect(loginUrl);
