@@ -28,7 +28,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `/admin/users/${id}`,
     DELETE: (id: number) => `/admin/users/${id}`,
     RESET_PASSWORD: (id: number) => `/admin/users/${id}/reset-password`,
-    PROFILE: (userId: number) => `/admin/auth/userProfile?userId=${userId}`,
+    PROFILE: (userId: number) => `/admin/users/${userId}`,
   },
   
   // Admins

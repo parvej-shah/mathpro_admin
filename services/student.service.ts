@@ -45,12 +45,33 @@ export interface StudentProfile {
 
 export const studentService = {
   /**
-   * Get student profile
+   * Get student profile — maps the flat /admin/users/:id response into
+   * the {basicInfo, enrolledCourses} shape the profile page expects.
    */
   getStudentProfile: async (
     userId: number
   ): Promise<ApiResponse<StudentProfile>> => {
     const response = await apiClient.get(API_ENDPOINTS.USERS.PROFILE(userId));
-    return response.data;
+    const raw = response.data;
+
+    if (!raw?.success || !raw?.data) return raw;
+
+    const user = raw.data as Record<string, unknown>;
+    const profileJson = (user.profile ?? {}) as Record<string, unknown>;
+
+    const basicInfo: StudentBasicInfo = {
+      name: user.name as string | undefined,
+      email: (user.email ?? user.login) as string | undefined,
+      phone: user.phone as string | undefined,
+      ...profileJson,
+    };
+
+    return {
+      ...raw,
+      data: {
+        basicInfo,
+        enrolledCourses: [],
+      },
+    };
   },
 };
