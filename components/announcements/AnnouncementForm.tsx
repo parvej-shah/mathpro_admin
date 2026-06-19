@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LexicalEditor } from "./LexicalEditor";
+import { RichPreview } from "@/components/ui/rich-preview";
 import {
   ArrowLeft,
   Megaphone,
@@ -256,6 +257,12 @@ export function AnnouncementForm({
                   placeholder="Write your announcement…"
                 />
               </div>
+              <RichPreview
+                html={description}
+                label="Live preview"
+                className="rounded-xl border-dashed bg-muted/20"
+                imgMaxHeight="[&_img]:max-h-72"
+              />
             </div>
           </div>
 
