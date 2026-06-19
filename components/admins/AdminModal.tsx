@@ -79,14 +79,14 @@ export function AdminModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.email) {
+    if (!formData.name || !formData.phone) {
       return;
     }
 
     const payload: CreateAdminData = {
       name: formData.name,
-      email: formData.email,
-      phone: formData.phone || undefined,
+      phone: formData.phone,
+      email: formData.email || undefined,
       type: formData.type,
     };
 
@@ -119,7 +119,24 @@ export function AdminModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
+            <Label htmlFor="phone">Phone *</Label>
+            <Input
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="e.g., 01712345678"
+              required
+            />
+            {!admin && (
+              <p className="text-xs text-muted-foreground">
+                Password will be auto-generated and sent via SMS to this number
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email (Optional)</Label>
             <Input
               id="email"
               name="email"
@@ -128,26 +145,9 @@ export function AdminModal({
               onChange={handleChange}
               placeholder="Enter email address"
               autoComplete="email"
-              required
-            />
-            {!admin && (
-              <p className="text-xs text-muted-foreground">
-                Password will be auto-generated and sent to this email
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone (Optional)</Label>
-            <Input
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="e.g., 01712345678"
             />
             <p className="text-xs text-muted-foreground">
-              11-digit Bangladesh phone number starting with 01
+              For Google login. Not required if using phone + password only.
             </p>
           </div>
 

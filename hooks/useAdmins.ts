@@ -77,7 +77,7 @@ export function useUpdateAdmin() {
 
 /**
  * Set admin password mutation
- * Note: New password is auto-generated and sent to the target admin's email
+ * Note: New password is auto-generated and sent via SMS
  */
 export function useSetAdminPassword() {
   return useMutation({
@@ -89,10 +89,40 @@ export function useSetAdminPassword() {
       data: SetPasswordData;
     }) => adminService.setPassword(id, data),
     onSuccess: () => {
-      toast.success("Password has been reset and sent to admin's email");
+      toast.success("Password has been reset and sent via SMS");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to reset password");
+    },
+  });
+}
+
+/**
+ * Search regular users for promotion
+ */
+export function useSearchUsers(query: string) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.all, "search-users", query] as const,
+    queryFn: () => adminService.searchUsers(query),
+    enabled: query.length >= 2,
+  });
+}
+
+/**
+ * Promote user mutation
+ */
+export function usePromoteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, type }: { id: number; type: 1 | 2 }) =>
+      adminService.promoteUser(id, type),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lists() });
+      toast.success("User promoted successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to promote user");
     },
   });
 }

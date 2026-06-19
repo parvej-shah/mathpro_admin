@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { USER_TYPES } from "@/lib/constants";
 import { AdminModal } from "@/components/admins/AdminModal";
+import { PromoteUserModal } from "@/components/admins/PromoteUserModal";
 import { SetPasswordDialog } from "@/components/admins/SetPasswordDialog";
 import { DeleteConfirmDialog } from "@/components/admins/DeleteConfirmDialog";
 import { UserRoleModal } from "@/components/roles/UserRoleModal";
@@ -27,6 +28,7 @@ import {
   faLock,
   faSearch,
   faRotateLeft,
+  faArrowUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
@@ -50,6 +52,7 @@ export default function AdminManagementPage() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
   const [adminForRoles, setAdminForRoles] = useState<Admin | null>(null);
 
@@ -236,14 +239,25 @@ export default function AdminManagementPage() {
             : `Manage ${admins.length} account${admins.length === 1 ? "" : "s"} with privileged access — keep roles tidy and access calm.`
         }
         action={
-          <Button
-            onClick={handleCreate}
-            size="default"
-            className="h-11 rounded-full px-5 font-semibold shadow-sm"
-          >
-            <FontAwesomeIcon icon={faPlus} className="mr-2 h-4 w-4" />
-            {createAdmin.isPending ? "Creating..." : "Add Admin"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setIsPromoteModalOpen(true)}
+              size="default"
+              variant="outline"
+              className="h-11 rounded-full px-5 font-semibold shadow-sm"
+            >
+              <FontAwesomeIcon icon={faArrowUp} className="mr-2 h-4 w-4" />
+              Promote User
+            </Button>
+            <Button
+              onClick={handleCreate}
+              size="default"
+              className="h-11 rounded-full px-5 font-semibold shadow-sm"
+            >
+              <FontAwesomeIcon icon={faPlus} className="mr-2 h-4 w-4" />
+              {createAdmin.isPending ? "Creating..." : "Add Admin"}
+            </Button>
+          </div>
         }
       />
 
@@ -374,6 +388,11 @@ export default function AdminManagementPage() {
         isDeleting={deleteAdmin.isPending}
         canDelete={canDelete}
         adminName={selectedAdmin?.name}
+      />
+
+      <PromoteUserModal
+        isOpen={isPromoteModalOpen}
+        onClose={() => setIsPromoteModalOpen(false)}
       />
 
       <UserRoleModal

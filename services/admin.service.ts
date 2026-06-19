@@ -4,10 +4,20 @@ import type { Admin, ApiResponse } from "@/types";
 
 export interface CreateAdminData {
   name: string;
-  email: string; // Required - will be used as login
-  phone?: string; // Optional - 11-digit BD phone (starts with 01)
+  phone: string; // Required - 11-digit BD phone (starts with 01), used as login
+  email?: string; // Optional - for Google login
   type: 1 | 2; // 1 = Admin, 2 = Moderator
-  profile?: Record<string, unknown>; // Optional additional profile data
+  profile?: Record<string, unknown>;
+}
+
+export interface SearchedUser {
+  id: number;
+  name: string;
+  type: number;
+  login: string;
+  email: string | null;
+  phone: string | null;
+  created_at: string;
 }
 
 export interface UpdateAdminData {
@@ -87,6 +97,29 @@ export const adminService = {
    */
   deleteAdmin: async (id: number): Promise<ApiResponse<void>> => {
     const response = await apiClient.delete(API_ENDPOINTS.ADMINS.DELETE(id));
+    return response.data;
+  },
+
+  /**
+   * Search regular users for promotion
+   */
+  searchUsers: async (query: string): Promise<ApiResponse<SearchedUser[]>> => {
+    const response = await apiClient.get(API_ENDPOINTS.ADMINS.SEARCH_USERS, {
+      params: { q: query },
+    });
+    return response.data;
+  },
+
+  /**
+   * Promote a regular user to admin/moderator
+   */
+  promoteUser: async (
+    id: number,
+    type: 1 | 2
+  ): Promise<ApiResponse<Admin>> => {
+    const response = await apiClient.post(API_ENDPOINTS.ADMINS.PROMOTE(id), {
+      type,
+    });
     return response.data;
   },
 };

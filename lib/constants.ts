@@ -39,6 +39,8 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `/admin/admins/${id}`,
     DELETE: (id: number) => `/admin/admins/${id}`,
     SET_PASSWORD: (id: number) => `/admin/admins/${id}/set-password`,
+    PROMOTE: (id: number) => `/admin/admins/${id}/promote`,
+    SEARCH_USERS: "/admin/admins/search-users",
   },
 
   // Roles (Role Management API)
