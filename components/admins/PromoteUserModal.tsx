@@ -11,13 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useSearchUsers, usePromoteUser } from "@/hooks/useAdmins";
 import type { SearchedUser } from "@/services/admin.service";
 
@@ -29,7 +22,6 @@ interface PromoteUserModalProps {
 export function PromoteUserModal({ isOpen, onClose }: PromoteUserModalProps) {
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<SearchedUser | null>(null);
-  const [promoteType, setPromoteType] = useState<1 | 2>(2);
 
   const { data: searchResult, isLoading: searching } = useSearchUsers(search);
   const promoteUser = usePromoteUser();
@@ -47,7 +39,7 @@ export function PromoteUserModal({ isOpen, onClose }: PromoteUserModalProps) {
   const handlePromote = () => {
     if (!selectedUser) return;
     promoteUser.mutate(
-      { id: selectedUser.id, type: promoteType },
+      selectedUser.id,
       {
         onSuccess: () => {
           handleClose();
@@ -59,7 +51,6 @@ export function PromoteUserModal({ isOpen, onClose }: PromoteUserModalProps) {
   const handleClose = () => {
     setSearch("");
     setSelectedUser(null);
-    setPromoteType(2);
     onClose();
   };
 
@@ -69,7 +60,7 @@ export function PromoteUserModal({ isOpen, onClose }: PromoteUserModalProps) {
         <DialogHeader>
           <DialogTitle>Promote Existing User</DialogTitle>
           <DialogDescription>
-            Search for a registered user and promote them to Admin or Moderator
+            Search for a registered user and promote them to Admin
           </DialogDescription>
         </DialogHeader>
 
@@ -133,24 +124,6 @@ export function PromoteUserModal({ isOpen, onClose }: PromoteUserModalProps) {
               >
                 ← Choose a different user
               </Button>
-
-              <div className="space-y-2">
-                <Label>Promote to</Label>
-                <Select
-                  value={promoteType.toString()}
-                  onValueChange={(v) =>
-                    setPromoteType(parseInt(v) as 1 | 2)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Admin</SelectItem>
-                    <SelectItem value="2">Moderator</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={handleClose}>

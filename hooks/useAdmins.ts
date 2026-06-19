@@ -115,8 +115,7 @@ export function usePromoteUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, type }: { id: number; type: 1 | 2 }) =>
-      adminService.promoteUser(id, type),
+    mutationFn: (id: number) => adminService.promoteUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lists() });
       toast.success("User promoted successfully");

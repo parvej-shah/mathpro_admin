@@ -36,12 +36,11 @@ import type { Admin } from "@/types";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-type RoleFilter = "all" | "1" | "2";
+type RoleFilter = "all" | "1";
 
 const ROLE_FILTERS: { value: RoleFilter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "1", label: "Admins" },
-  { value: "2", label: "Moderators" },
 ];
 
 export default function AdminManagementPage() {
@@ -121,10 +120,6 @@ export default function AdminManagementPage() {
 
   const adminCount = useMemo(
     () => admins.filter((a) => a.type === 1).length,
-    [admins]
-  );
-  const moderatorCount = useMemo(
-    () => admins.filter((a) => a.type === 2).length,
     [admins]
   );
 
@@ -262,7 +257,7 @@ export default function AdminManagementPage() {
       />
 
       {/* Quick stats */}
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <StatCard
           label="Total members"
           value={admins.length}
@@ -273,12 +268,6 @@ export default function AdminManagementPage() {
           label="Admins"
           value={adminCount}
           tone="primary"
-          loading={isLoading}
-        />
-        <StatCard
-          label="Moderators"
-          value={moderatorCount}
-          tone="info"
           loading={isLoading}
         />
       </div>

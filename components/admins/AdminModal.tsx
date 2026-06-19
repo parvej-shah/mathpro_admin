@@ -11,13 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { Admin } from "@/types";
 import type { CreateAdminData } from "@/services/admin.service";
 
@@ -40,12 +33,10 @@ export function AdminModal({
     name: string;
     email: string;
     phone: string;
-    type: 1 | 2;
   }>({
     name: "",
     email: "",
     phone: "",
-    type: 2, // Default to Moderator
   });
 
   // Initialize form data when modal opens or admin changes
@@ -57,14 +48,12 @@ export function AdminModal({
         name: admin.name || "",
         email: admin.email || "",
         phone: admin.phone || "",
-        type: (admin.type === 1 ? 1 : 2) as 1 | 2,
       });
     } else {
       setFormData({
         name: "",
         email: "",
         phone: "",
-        type: 2,
       });
     }
   }, [admin, isOpen]);
@@ -87,7 +76,7 @@ export function AdminModal({
       name: formData.name,
       phone: formData.phone,
       email: formData.email || undefined,
-      type: formData.type,
+      type: 1,
     };
 
     onSubmit(payload);
@@ -149,28 +138,6 @@ export function AdminModal({
             <p className="text-xs text-muted-foreground">
               For Google login. Not required if using phone + password only.
             </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
-            <Select
-              value={formData.type.toString()}
-              onValueChange={(value) => {
-                const numValue = parseInt(value);
-                setFormData({
-                  ...formData,
-                  type: (numValue === 1 ? 1 : 2) as 1 | 2,
-                });
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Admin</SelectItem>
-                <SelectItem value="2">Moderator</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

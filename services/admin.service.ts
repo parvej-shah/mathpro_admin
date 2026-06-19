@@ -6,7 +6,7 @@ export interface CreateAdminData {
   name: string;
   phone: string; // Required - 11-digit BD phone (starts with 01), used as login
   email?: string; // Optional - for Google login
-  type: 1 | 2; // 1 = Admin, 2 = Moderator
+  type: 1; // Always Admin
   profile?: Record<string, unknown>;
 }
 
@@ -113,12 +113,9 @@ export const adminService = {
   /**
    * Promote a regular user to admin/moderator
    */
-  promoteUser: async (
-    id: number,
-    type: 1 | 2
-  ): Promise<ApiResponse<Admin>> => {
+  promoteUser: async (id: number): Promise<ApiResponse<Admin>> => {
     const response = await apiClient.post(API_ENDPOINTS.ADMINS.PROMOTE(id), {
-      type,
+      type: 1,
     });
     return response.data;
   },
