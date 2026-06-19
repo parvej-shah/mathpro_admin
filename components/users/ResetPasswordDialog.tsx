@@ -30,8 +30,8 @@ export function ResetPasswordDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Reset Password</AlertDialogTitle>
           <AlertDialogDescription>
-            A new password will be generated and sent to the user. This action
-            cannot be undone.
+            A new password will be generated and sent via SMS to the user. This
+            action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

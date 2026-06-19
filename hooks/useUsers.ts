@@ -95,8 +95,16 @@ export function useDeleteUser() {
 export function useResetUserPassword() {
   return useMutation({
     mutationFn: (id: number) => userService.resetPassword(id),
-    onSuccess: () => {
-      toast.success("Password reset successfully");
+    onSuccess: (response) => {
+      const res = response as unknown as Record<string, unknown>;
+      if (res.smsFailed && res.password) {
+        toast.warning(
+          `Password reset but delivery failed. New password: ${res.password}`,
+          { duration: 30000 }
+        );
+      } else {
+        toast.success("Password reset and sent via SMS");
+      }
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to reset password");
