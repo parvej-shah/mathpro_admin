@@ -86,7 +86,7 @@ export function ModuleItem({ module, courseId, onDelete }: ModuleItemProps) {
     >
       {/* Drag handle */}
       <button
-        className="cursor-grab touch-none rounded p-1 text-muted-foreground/50 opacity-0 transition-opacity hover:text-foreground active:cursor-grabbing group-hover/module:opacity-100"
+        className="cursor-grab touch-none rounded p-1 text-muted-foreground/50 transition-opacity hover:text-foreground active:cursor-grabbing sm:opacity-0 sm:group-hover/module:opacity-100"
         aria-label="Drag to reorder"
         {...attributes}
         {...listeners}
@@ -165,7 +165,7 @@ export function ModuleItem({ module, courseId, onDelete }: ModuleItemProps) {
       </div>
 
       {/* Actions — revealed on hover */}
-      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover/module:opacity-100">
+      <div className="flex shrink-0 items-center gap-0.5 transition-opacity sm:opacity-0 sm:group-hover/module:opacity-100">
         <Button
           variant="ghost"
           size="icon"

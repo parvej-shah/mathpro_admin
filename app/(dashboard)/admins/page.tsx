@@ -36,17 +36,9 @@ import type { Admin } from "@/types";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-type RoleFilter = "all" | "1";
-
-const ROLE_FILTERS: { value: RoleFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "1", label: "Admins" },
-];
-
 export default function AdminManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<RoleFilter>("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -109,23 +101,11 @@ export default function AdminManagementPage() {
       );
     }
 
-    if (typeFilter !== "all") {
-      filtered = filtered.filter(
-        (admin: Admin) => admin.type === parseInt(typeFilter, 10)
-      );
-    }
-
     return filtered;
-  }, [admins, debouncedSearch, typeFilter]);
+  }, [admins, debouncedSearch]);
 
-  const adminCount = useMemo(
-    () => admins.filter((a) => a.type === 1).length,
-    [admins]
-  );
-
-  const hasActiveFilters = typeFilter !== "all" || searchQuery.trim() !== "";
-  const activeFilterCount =
-    (typeFilter !== "all" ? 1 : 0) + (searchQuery.trim() !== "" ? 1 : 0);
+  const hasActiveFilters = searchQuery.trim() !== "";
+  const activeFilterCount = searchQuery.trim() !== "" ? 1 : 0;
 
   const canDelete = admins.length > 1;
 
@@ -201,7 +181,6 @@ export default function AdminManagementPage() {
   const handleResetFilters = () => {
     setSearchQuery("");
     setDebouncedSearch("");
-    setTypeFilter("all");
   };
 
   // Show access denied for non-admin users (Moderators)
@@ -257,16 +236,10 @@ export default function AdminManagementPage() {
       />
 
       {/* Quick stats */}
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-5 max-w-xs">
         <StatCard
-          label="Total members"
+          label="Total Admins"
           value={admins.length}
-          tone="default"
-          loading={isLoading}
-        />
-        <StatCard
-          label="Admins"
-          value={adminCount}
           tone="primary"
           loading={isLoading}
         />
@@ -296,39 +269,19 @@ export default function AdminManagementPage() {
             </div>
           )}
 
-          <div className="flex flex-col gap-3 xl:flex-row">
-            <div className="relative flex-1 min-w-0">
-              <FontAwesomeIcon
-                icon={faSearch}
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
-              />
-              <Input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name, email, phone, or login..."
-                className="h-12 rounded-full border-border/80 bg-muted/30 pl-10 pr-4 text-base shadow-none transition-colors focus:bg-background"
-                aria-label="Search admins"
-              />
-            </div>
-
-            <div className="flex rounded-full border border-border/80 bg-muted/30 p-1">
-              {ROLE_FILTERS.map((role) => (
-                <button
-                  key={role.value}
-                  type="button"
-                  onClick={() => setTypeFilter(role.value)}
-                  className={cn(
-                    "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                    typeFilter === role.value
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {role.label}
-                </button>
-              ))}
-            </div>
+          <div className="relative">
+            <FontAwesomeIcon
+              icon={faSearch}
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
+            />
+            <Input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, email, phone, or login..."
+              className="h-12 rounded-full border-border/80 bg-muted/30 pl-10 pr-4 text-base shadow-none transition-colors focus:bg-background"
+              aria-label="Search admins"
+            />
           </div>
 
           <AdminTable

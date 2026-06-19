@@ -107,7 +107,7 @@ export function ChapterItem({
               </AccordionPrimitive.Trigger>
 
               {/* Actions — subtle until hover */}
-              <div className="flex shrink-0 items-center gap-0.5 opacity-60 transition-opacity group-hover/chapter:opacity-100">
+              <div className="flex shrink-0 items-center gap-0.5 transition-opacity sm:opacity-60 sm:group-hover/chapter:opacity-100">
                 {onAddModule && (
                   <Button
                     variant="ghost"

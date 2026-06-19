@@ -40,6 +40,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -122,6 +132,10 @@ export default function CourseViewPage() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importId, setImportId] = useState<string | null>(null);
   const [isSerializerOpen, setIsSerializerOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "chapter" | "module";
+    id: number;
+  } | null>(null);
 
   // Get chapter data from course data instead of separate API call
   const editingChapter = editingChapterId
@@ -367,33 +381,32 @@ export default function CourseViewPage() {
     // Keeping the function for now but it's not used
   };
 
-  const handleDeleteChapter = async (chapterId: number) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this chapter? All modules in this chapter will also be deleted."
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await deleteChapter.mutateAsync(chapterId);
-      toast.success("Chapter deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete chapter");
-    }
+  const handleDeleteChapter = (chapterId: number) => {
+    setDeleteTarget({ type: "chapter", id: chapterId });
   };
 
-  const handleDeleteModule = async (moduleId: number) => {
-    if (!confirm("Are you sure you want to delete this module?")) {
-      return;
-    }
+  const handleDeleteModule = (moduleId: number) => {
+    setDeleteTarget({ type: "module", id: moduleId });
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteModule.mutateAsync(moduleId);
-      toast.success("Module deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete module");
+      if (deleteTarget.type === "chapter") {
+        await deleteChapter.mutateAsync(deleteTarget.id);
+        toast.success("Chapter deleted successfully");
+      } else {
+        await deleteModule.mutateAsync(deleteTarget.id);
+        toast.success("Module deleted successfully");
+      }
+    } catch {
+      toast.error(
+        deleteTarget.type === "chapter"
+          ? "Failed to delete chapter"
+          : "Failed to delete module"
+      );
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -801,6 +814,40 @@ export default function CourseViewPage() {
         isOpen={isSerializerOpen}
         onClose={() => setIsSerializerOpen(false)}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {deleteTarget?.type === "chapter" ? "Chapter" : "Module"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.type === "chapter"
+                ? "Are you sure you want to delete this chapter? All modules in this chapter will also be deleted."
+                : "Are you sure you want to delete this module?"}
+              {" "}This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleteChapter.isPending || deleteModule.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteChapter.isPending || deleteModule.isPending
+                ? "Deleting..."
+                : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageContainer>
   );
 }
