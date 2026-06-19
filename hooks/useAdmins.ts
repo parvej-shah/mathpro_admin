@@ -43,9 +43,17 @@ export function useCreateAdmin() {
 
   return useMutation({
     mutationFn: (data: CreateAdminData) => adminService.createAdmin(data),
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lists() });
-      toast.success("Admin created successfully");
+      const res = response as unknown as Record<string, unknown>;
+      if (res.smsFailed && res.password) {
+        toast.warning(
+          `Admin created but SMS failed. Password: ${res.password}`,
+          { duration: 30000 }
+        );
+      } else {
+        toast.success("Admin created successfully");
+      }
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to create admin");
@@ -88,8 +96,16 @@ export function useSetAdminPassword() {
       id: number;
       data: SetPasswordData;
     }) => adminService.setPassword(id, data),
-    onSuccess: () => {
-      toast.success("Password has been reset and sent via SMS");
+    onSuccess: (response) => {
+      const res = response as unknown as Record<string, unknown>;
+      if (res.smsFailed && res.password) {
+        toast.warning(
+          `Password reset but SMS failed. New password: ${res.password}`,
+          { duration: 30000 }
+        );
+      } else {
+        toast.success("Password has been reset and sent via SMS");
+      }
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to reset password");

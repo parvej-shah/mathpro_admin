@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSection } from "@/components/course/FormSection";
+import { ThumbnailUploadField } from "@/components/course/CourseMetadataForm";
 import { useCourses } from "@/hooks/useAnnouncements";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -25,11 +26,16 @@ import {
   ChevronLeft,
   Loader2,
   Info,
+  ImageIcon,
   GraduationCap,
   Search,
   AlertCircle,
 } from "lucide-react";
-import type { Bundle, CreateBundleData } from "@/services/bundle.service";
+import type {
+  Bundle,
+  BundleChips,
+  CreateBundleData,
+} from "@/services/bundle.service";
 
 interface BundleFormProps {
   mode: "create" | "edit";
@@ -44,6 +50,26 @@ interface Course {
   title: string;
   price?: number;
   [key: string]: unknown;
+}
+
+function normalizeBundleChips(chips: unknown): BundleChips {
+  if (!chips || typeof chips !== "object") return {};
+  return chips as BundleChips;
+}
+
+function getBundleThumb43(chips: unknown): string {
+  return normalizeBundleChips(chips).thumbnails?.bundle_thumb_4_3 || "";
+}
+
+function setBundleThumb43(chips: unknown, nextThumb: string): BundleChips {
+  const current = normalizeBundleChips(chips);
+  return {
+    ...current,
+    thumbnails: {
+      ...(current.thumbnails || {}),
+      bundle_thumb_4_3: nextThumb,
+    },
+  };
 }
 
 function extractCourses(data: unknown): Course[] {
@@ -85,6 +111,11 @@ export function BundleForm({ mode, bundleId, bundleRef }: BundleFormProps) {
     price: 0,
     url: "",
     short_description: "",
+    chips: {
+      thumbnails: {
+        bundle_thumb_4_3: "",
+      },
+    },
     is_live: false,
     is_active: true,
   });
@@ -116,6 +147,7 @@ export function BundleForm({ mode, bundleId, bundleRef }: BundleFormProps) {
       price: bundle.price || 0,
       url: bundle.url || "",
       short_description: bundle.short_description || "",
+      chips: normalizeBundleChips(bundle.chips),
       is_live: bundle.is_live || false,
       is_active: bundle.is_active ?? true,
     });
@@ -186,6 +218,8 @@ export function BundleForm({ mode, bundleId, bundleRef }: BundleFormProps) {
       .replace(/^-+|-+$/g, "");
     setFormData((prev) => ({ ...prev, url }));
   };
+
+  const bundleThumbnail = getBundleThumb43(formData.chips);
 
   const toggleCourse = (id: number) => {
     setSelectedCourseIds((prev) =>
@@ -386,6 +420,24 @@ export function BundleForm({ mode, bundleId, bundleRef }: BundleFormProps) {
               </div>
             </div>
             </div>
+          </FormSection>
+
+          <FormSection
+            title="Media"
+            description="Upload the main combo thumbnail used across the student site."
+            icon={ImageIcon}
+          >
+            <ThumbnailUploadField
+              label="bundle_thumb_4_3"
+              description="Primary combo thumbnail shown in combo cards and detail pages."
+              value={bundleThumbnail}
+              onChange={(nextThumb) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  chips: setBundleThumb43(prev.chips, nextThumb),
+                }))
+              }
+            />
           </FormSection>
 
           {/* Courses */}

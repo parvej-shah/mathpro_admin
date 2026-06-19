@@ -21,7 +21,7 @@ interface SetPasswordDialogProps {
   onSubmit: (currentPassword: string) => void;
   isSubmitting?: boolean;
   targetAdminName?: string;
-  targetAdminEmail?: string;
+  targetAdminPhone?: string;
 }
 
 export function SetPasswordDialog({
@@ -30,7 +30,7 @@ export function SetPasswordDialog({
   onSubmit,
   isSubmitting = false,
   targetAdminName,
-  targetAdminEmail,
+  targetAdminPhone,
 }: SetPasswordDialogProps) {
   const [currentPassword, setCurrentPassword] = useState("");
 
@@ -62,8 +62,8 @@ export function SetPasswordDialog({
         <Alert className="bg-info/10 border-info/30">
           <FontAwesomeIcon icon={faInfoCircle} className="h-4 w-4 text-info" />
           <AlertDescription className="text-info">
-            A new password will be auto-generated and sent to{" "}
-            <strong>{targetAdminEmail || "the admin's email"}</strong>.
+            A new password will be auto-generated and sent via SMS to{" "}
+            <strong>{targetAdminPhone || "the admin's phone"}</strong>.
             You need to enter YOUR password to authorize this action.
           </AlertDescription>
         </Alert>

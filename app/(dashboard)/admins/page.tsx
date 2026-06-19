@@ -364,7 +364,7 @@ export default function AdminManagementPage() {
         onSubmit={handlePasswordSubmit}
         isSubmitting={setAdminPassword.isPending}
         targetAdminName={selectedAdmin?.name}
-        targetAdminEmail={selectedAdmin?.email || selectedAdmin?.login}
+        targetAdminPhone={selectedAdmin?.phone || selectedAdmin?.login}
       />
 
       <DeleteConfirmDialog

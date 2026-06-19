@@ -2,6 +2,14 @@ import apiClient from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import type { ApiResponse } from "@/types";
 
+export interface BundleChips {
+  [key: string]: unknown;
+  thumbnails?: {
+    [key: string]: unknown;
+    bundle_thumb_4_3?: string;
+  };
+}
+
 export interface Bundle {
   id: number;
   title: string;
@@ -9,7 +17,7 @@ export interface Bundle {
   url?: string;
   short_description?: string;
   you_get?: string[];
-  chips?: string[];
+  chips?: BundleChips;
   faq_list?: Array<{ question: string; answer: string }>;
   feedback_list?: Array<{ name: string; feedback: string }>;
   intro_video?: string;
@@ -24,7 +32,7 @@ export interface CreateBundleData {
   url?: string;
   short_description?: string;
   you_get?: string[];
-  chips?: string[];
+  chips?: BundleChips;
   faq_list?: Array<{ question: string; answer: string }>;
   feedback_list?: Array<{ name: string; feedback: string }>;
   intro_video?: string;
