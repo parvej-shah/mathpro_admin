@@ -179,7 +179,11 @@ export default function BundleDetailPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <StatusPill on={!!bundle.is_live} onLabel="Live" offLabel="Not live" />
+              <StatusPill
+                on={!!bundle.is_live}
+                onLabel="Published"
+                offLabel="Unpublished"
+              />
               <StatusPill
                 on={!!bundle.is_active}
                 onLabel="Active"

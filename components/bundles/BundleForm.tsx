@@ -400,7 +400,7 @@ export function BundleForm({ mode, bundleId, bundleRef }: BundleFormProps) {
                   }
                 />
                 <Label htmlFor="is_live" className="cursor-pointer">
-                  Live
+                  Published
                 </Label>
               </div>
               <div className="flex items-center gap-2">
