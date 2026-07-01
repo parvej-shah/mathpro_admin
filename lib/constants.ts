@@ -200,6 +200,7 @@ export const API_ENDPOINTS = {
     CREATE: "/admin/testimonial/create",
     UPDATE: (feedbackId: string) => `/admin/testimonial/update/${feedbackId}`,
     DELETE: (feedbackId: string) => `/admin/testimonial/delete/${feedbackId}`,
+    MANUAL_REVIEW: "/admin/testimonial/manual-review",
   },
   
   // After Purchase Messages

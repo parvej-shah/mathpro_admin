@@ -53,7 +53,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useTestimonials, useCreateTestimonial, useUpdateTestimonial, useDeleteTestimonial, useReorderTestimonials } from "@/hooks/useTestimonials";
+import { useTestimonials, useCreateTestimonial, useUpdateTestimonial, useDeleteTestimonial, useReorderTestimonials, useCreateManualReview } from "@/hooks/useTestimonials";
+import { ManualReviewDialog } from "@/components/testimonials/ManualReviewDialog";
 import { useCourseFeedbackList } from "@/hooks/useFeedback";
 import { useCoursesList } from "@/hooks/useCourse";
 import type { CourseFeedbackCategory } from "@/types/feedback.types";
@@ -86,6 +87,7 @@ export default function TestimonialManagementPage() {
   const [courseFilter, setCourseFilter] = useState<string>("all");
   const [ratingFilter, setRatingFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | CourseFeedbackCategory>("all");
+  const [isManualReviewOpen, setIsManualReviewOpen] = useState(false);
 
   const { data: testimonialsData, isLoading: testimonialsLoading } = useTestimonials();
   const { data: coursesData } = useCoursesList();
@@ -93,6 +95,7 @@ export default function TestimonialManagementPage() {
   const updateTestimonial = useUpdateTestimonial();
   const deleteTestimonial = useDeleteTestimonial();
   const reorderTestimonials = useReorderTestimonials();
+  const createManualReview = useCreateManualReview();
 
   const testimonials = useMemo(() => testimonialsData ?? [], [testimonialsData]);
   const courses = useMemo(() => coursesData ?? [], [coursesData]);
@@ -184,6 +187,24 @@ export default function TestimonialManagementPage() {
           eyebrowIcon={faQuoteLeft}
           title="Testimonial Management"
           description="Select existing course feedbacks to feature on the public site testimonial section."
+          action={
+            <Button onClick={() => setIsManualReviewOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Review
+            </Button>
+          }
+        />
+
+        <ManualReviewDialog
+          isOpen={isManualReviewOpen}
+          onClose={() => setIsManualReviewOpen(false)}
+          onSubmit={(data) =>
+            createManualReview.mutate(data, {
+              onSuccess: () => setIsManualReviewOpen(false),
+            })
+          }
+          courses={courses}
+          isSubmitting={createManualReview.isPending}
         />
 
         <div className="grid gap-4 md:grid-cols-3">
@@ -226,6 +247,7 @@ export default function TestimonialManagementPage() {
                   <TableHead>User</TableHead>
                   <TableHead>Course</TableHead>
                   <TableHead className="w-[90px]">Rating</TableHead>
+                  <TableHead className="w-[200px]">Video URL</TableHead>
                   <TableHead className="w-[110px]">Order</TableHead>
                   <TableHead className="w-[120px]">Published</TableHead>
                   <TableHead className="w-[180px] text-right">Actions</TableHead>
@@ -234,13 +256,13 @@ export default function TestimonialManagementPage() {
               <TableBody>
                 {testimonialsLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                       Loading featured testimonials...
                     </TableCell>
                   </TableRow>
                 ) : testimonials.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                       No testimonials selected yet.
                     </TableCell>
                   </TableRow>
@@ -261,6 +283,12 @@ export default function TestimonialManagementPage() {
                             updateTestimonial.mutate({
                               feedback_id: item.feedback_id,
                               is_active: checked,
+                            })
+                          }
+                          onVideoUrlChange={(videoUrl) =>
+                            updateTestimonial.mutate({
+                              feedback_id: item.feedback_id,
+                              video_url: videoUrl || null,
                             })
                           }
                           onRemove={() => deleteTestimonial.mutate(item.feedback_id)}
@@ -440,12 +468,14 @@ function SortableTestimonialRow({
   isReordering,
   isUpdating,
   onPublishedChange,
+  onVideoUrlChange,
   onRemove,
 }: {
   item: {
     feedback_id: string;
     sort_order: number;
     is_active: boolean;
+    video_url?: string | null;
     comment: string;
     user_name: string;
     course_name?: string;
@@ -456,8 +486,14 @@ function SortableTestimonialRow({
   isReordering: boolean;
   isUpdating: boolean;
   onPublishedChange: (checked: boolean) => void;
+  onVideoUrlChange: (videoUrl: string) => void;
   onRemove: () => void;
 }) {
+  const [videoUrl, setVideoUrl] = useState(item.video_url || "");
+
+  useEffect(() => {
+    setVideoUrl(item.video_url || "");
+  }, [item.video_url]);
   const {
     attributes,
     listeners,
@@ -513,6 +549,19 @@ function SortableTestimonialRow({
           <FontAwesomeIcon icon={faStar} className="mr-1 text-warning" />
           {item.rating}
         </Badge>
+      </TableCell>
+      <TableCell>
+        <Input
+          value={videoUrl}
+          onChange={(e) => setVideoUrl(e.target.value)}
+          onBlur={() => {
+            if (videoUrl !== (item.video_url || "")) {
+              onVideoUrlChange(videoUrl.trim());
+            }
+          }}
+          placeholder="YouTube link"
+          className="h-8 text-xs"
+        />
       </TableCell>
       <TableCell>
         <Badge variant="outline">{item.sort_order}</Badge>

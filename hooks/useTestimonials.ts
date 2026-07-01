@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   testimonialService,
+  type CreateManualReviewData,
   type CreateTestimonialData,
   type FeaturedTestimonial,
 } from "@/services/testimonial.service";
@@ -49,6 +50,7 @@ export function useUpdateTestimonial() {
       feedback_id: string;
       sort_order?: number;
       is_active?: boolean;
+      video_url?: string | null;
     }) => testimonialService.updateTestimonial(feedback_id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.list() });
@@ -71,6 +73,22 @@ export function useDeleteTestimonial() {
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to remove testimonial");
+    },
+  });
+}
+
+export function useCreateManualReview() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateManualReviewData) =>
+      testimonialService.createManualReview(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courseFeedback"] });
+      toast.success("Review created successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to create review");
     },
   });
 }

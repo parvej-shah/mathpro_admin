@@ -6,6 +6,7 @@ export interface FeaturedTestimonial {
   feedback_id: string;
   sort_order: number;
   is_active: boolean;
+  video_url?: string | null;
   course_id: string;
   user_id: string;
   rating: number;
@@ -21,12 +22,22 @@ export interface CreateTestimonialData {
   feedback_id: string;
   sort_order: number;
   is_active: boolean;
+  video_url?: string | null;
 }
 
 export interface UpdateTestimonialData {
   feedback_id: string;
   sort_order?: number;
   is_active?: boolean;
+  video_url?: string | null;
+}
+
+export interface CreateManualReviewData {
+  course_id: string;
+  display_name: string;
+  rating: number;
+  comment: string;
+  avatar_url?: string;
 }
 
 export const testimonialService = {
@@ -55,6 +66,13 @@ export const testimonialService = {
 
   deleteTestimonial: async (feedbackId: string): Promise<ApiResponse<void>> => {
     const response = await apiClient.delete(API_ENDPOINTS.TESTIMONIALS.DELETE(feedbackId));
+    return response.data;
+  },
+
+  createManualReview: async (
+    data: CreateManualReviewData,
+  ): Promise<ApiResponse<{ id: string }>> => {
+    const response = await apiClient.post(API_ENDPOINTS.TESTIMONIALS.MANUAL_REVIEW, data);
     return response.data;
   },
 };
