@@ -285,12 +285,15 @@ export function LiveClassForm({ classId, onSuccess }: LiveClassFormProps) {
             <FontAwesomeIcon icon={faImage} className="h-4 w-4 text-primary" />
             <Label className="text-base font-semibold">Class Thumbnail</Label>
           </div>
+          <p className="text-xs text-muted-foreground">
+            16:9 image, converted to webp, max 200KB.
+          </p>
           <div className="border-2 border-dashed rounded-lg p-8 text-center relative">
             {thumbnailPreview ? (
               <img
                 src={thumbnailPreview}
                 alt="Thumbnail preview"
-                className="w-full max-w-md h-48 object-cover rounded-md mx-auto"
+                className="w-full max-w-md aspect-video object-cover rounded-md mx-auto"
               />
             ) : (
               <p className="text-muted-foreground">

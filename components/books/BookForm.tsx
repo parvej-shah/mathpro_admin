@@ -181,10 +181,10 @@ export function BookForm({ isOpen, onClose, book }: BookFormProps) {
 
           <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
             <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
-              <Field label="Cover image">
+              <Field label="Cover image" hint="2:3 portrait, converted to webp, max 200KB.">
                 <label
                   className={cn(
-                    "relative flex h-40 w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border border-dashed border-border/70 bg-background/60 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground sm:h-full"
+                    "relative flex aspect-[2/3] w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border border-dashed border-border/70 bg-background/60 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
                   )}
                 >
                   {coverPreview ? (

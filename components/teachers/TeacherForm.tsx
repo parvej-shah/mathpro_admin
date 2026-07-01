@@ -283,7 +283,7 @@ export function TeacherForm({
           <DialogDescription>
             {isEditMode
               ? "Update teacher information and course assignments"
-              : "Add a new teacher to the system. Use 'Grant Admin Access' to give them admin panel credentials."}
+              : "Add a new teacher to the system."}
           </DialogDescription>
         </DialogHeader>
 
@@ -314,6 +314,9 @@ export function TeacherForm({
               <FontAwesomeIcon icon={faImage} className="mr-2 h-4 w-4" />
               {isEditMode ? "Change Photo" : "Upload Photo"}
             </Button>
+            <p className="text-xs text-muted-foreground">
+              Square photo (1:1), face centered. Max 200KB.
+            </p>
             <input
               ref={fileInputRef}
               type="file"

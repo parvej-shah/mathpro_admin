@@ -558,7 +558,7 @@ export function RoutineEditor({
                 Routine image
               </h2>
               <p className="text-xs text-muted-foreground/80">
-                Upload a clear schedule image (PNG, JPG, max 10MB).
+                Upload a clear schedule image (16:9). Converted to webp, max 200KB.
               </p>
             </div>
           </header>
@@ -590,7 +590,7 @@ export function RoutineEditor({
                   Click to upload
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  PNG, JPG up to 10MB
+                  16:9 image, converted to webp
                 </p>
               </div>
             </button>
