@@ -1,14 +1,20 @@
 import apiClient from "@/lib/api";
+import { convertImageToWebp } from "@/lib/image-conversion";
 
 export type UploadPurpose =
   | "teacher-image"
   | "routine-image"
   | "live-class-thumbnail"
   | "course-thumbnail"
+  | "course-thumbnail-card"
+  | "course-thumbnail-banner"
+  | "bundle-thumbnail-card"
+  | "bundle-thumbnail-banner"
   | "course-instructor-image"
   | "course-feedback-image"
   | "contest-thumbnail"
   | "announcement-attachment"
+  | "announcement-image"
   | "quiz-image"
   | "assignment-document"
   | "module-pdf"
@@ -17,6 +23,24 @@ export type UploadPurpose =
   | "module-code-file"
   | "course-import"
   | "book-cover";
+
+// Mirrors the maxBytes side of Math_Pro_backend/util/uploadPolicies.js for the
+// webp-only image purposes, so conversion can compress to fit before upload.
+const WEBP_IMAGE_POLICIES: Partial<Record<UploadPurpose, { maxBytes: number; maxWidth: number }>> = {
+  "teacher-image": { maxBytes: 200 * 1024, maxWidth: 800 },
+  "routine-image": { maxBytes: 200 * 1024, maxWidth: 1600 },
+  "live-class-thumbnail": { maxBytes: 200 * 1024, maxWidth: 1280 },
+  "course-thumbnail-card": { maxBytes: 300 * 1024, maxWidth: 900 },
+  "course-thumbnail-banner": { maxBytes: 250 * 1024, maxWidth: 1600 },
+  "bundle-thumbnail-card": { maxBytes: 300 * 1024, maxWidth: 900 },
+  "bundle-thumbnail-banner": { maxBytes: 250 * 1024, maxWidth: 1600 },
+  "course-instructor-image": { maxBytes: 200 * 1024, maxWidth: 800 },
+  "course-feedback-image": { maxBytes: 200 * 1024, maxWidth: 800 },
+  "contest-thumbnail": { maxBytes: 200 * 1024, maxWidth: 1280 },
+  "announcement-image": { maxBytes: 200 * 1024, maxWidth: 1280 },
+  "quiz-image": { maxBytes: 200 * 1024, maxWidth: 1280 },
+  "book-cover": { maxBytes: 200 * 1024, maxWidth: 800 },
+};
 
 interface UploadOptions {
   purpose: UploadPurpose;
@@ -85,13 +109,21 @@ export async function uploadImageToS3(
   }
 
   try {
+    const webpPolicy = WEBP_IMAGE_POLICIES[options.purpose];
+    const uploadFile = webpPolicy
+      ? await convertImageToWebp(file, {
+          maxWidth: webpPolicy.maxWidth,
+          maxBytes: webpPolicy.maxBytes,
+        })
+      : file;
+
     const presignedResponse = await apiClient.post<PresignedUploadResponse>(
       "/v2/admin/upload/presigned-url",
       {
         purpose: options.purpose,
-        file_name: file.name,
-        content_type: file.type,
-        content_length: file.size,
+        file_name: uploadFile.name,
+        content_type: uploadFile.type,
+        content_length: uploadFile.size,
       }
     );
 
@@ -101,7 +133,7 @@ export async function uploadImageToS3(
 
     await putFileToPresignedUrl(
       presignedResponse.data.data.upload_url,
-      file,
+      uploadFile,
       options.onProgress
     );
 

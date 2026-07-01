@@ -78,14 +78,19 @@ export const API_ENDPOINTS = {
     GET_FULL: (id: number) => `/v2/admin/course/${id}/full`,
     CREATE: "/v2/admin/course",
     UPDATE_FULL: (id: number) => `/v2/admin/course/${id}/full`,
-    FEATURED: {
-      LIST: "/v2/admin/course/featured",
-      CREATE: "/v2/admin/course/featured",
-      UPDATE: (id: number) => `/v2/admin/course/featured/${id}`,
-      DELETE: (id: number) => `/v2/admin/course/featured/${id}`,
-    },
     REVENUE: "/admin/course/getAllRevenue",
     PURCHASES: (courseId: number) => `/admin/course/getAllCoursePerchasesApi?identifier=${639 * courseId}`,
+  },
+
+  // Featured rail (mixed courses + bundles)
+  FEATURED_ITEMS: {
+    LIST: "/v2/admin/featured",
+    CREATE: "/v2/admin/featured",
+    UPDATE: (itemType: "course" | "bundle", itemId: number) =>
+      `/v2/admin/featured/${itemType}/${itemId}`,
+    DELETE: (itemType: "course" | "bundle", itemId: number) =>
+      `/v2/admin/featured/${itemType}/${itemId}`,
+    REORDER: "/v2/admin/featured/reorder",
   },
   
   // Chapters

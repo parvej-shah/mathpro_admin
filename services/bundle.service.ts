@@ -7,6 +7,7 @@ export interface BundleChips {
   thumbnails?: {
     [key: string]: unknown;
     bundle_thumb_4_3?: string;
+    bundle_thumbnail_16_9?: string;
   };
 }
 

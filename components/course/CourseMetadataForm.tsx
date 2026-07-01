@@ -16,7 +16,7 @@ import { CalendarIcon, ImagePlus, Loader2, X } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { deleteStorageObject, uploadImageToS3 } from "@/lib/s3-upload";
+import { deleteStorageObject, uploadImageToS3, type UploadPurpose } from "@/lib/s3-upload";
 import type { CourseChipsCanonical, LabeledValue } from "@/types/course.types";
 import { dateToUnixSeconds, unixSecondsToDate } from "@/lib/course-form-mapper";
 
@@ -82,11 +82,15 @@ export function ThumbnailUploadField({
   description,
   value,
   onChange,
+  purpose,
+  aspectRatio,
 }: {
   label: string;
   description?: string;
   value: string;
   onChange: (next: string) => void;
+  purpose: UploadPurpose;
+  aspectRatio: "4:3" | "16:9";
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState(value);
@@ -130,7 +134,7 @@ export function ThumbnailUploadField({
 
     try {
       const uploadedUrl = await uploadImageToS3(file, {
-        purpose: "course-thumbnail",
+        purpose,
       });
       onChange(uploadedUrl);
 
@@ -267,7 +271,7 @@ export function ThumbnailUploadField({
             <p className="text-sm text-muted-foreground">
               {preview
                 ? "The uploaded URL is stored automatically."
-                : "Select a square or 16:9 image. It will upload immediately."}
+                : `Select a ${aspectRatio} image. It will be converted to webp and uploaded immediately.`}
             </p>
 
             {error && <p className="text-sm text-destructive">{error}</p>}

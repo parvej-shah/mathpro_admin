@@ -100,8 +100,7 @@ function createDefaultSocials(): CourseSocials {
 function createDefaultThumbnails(): CourseThumbnails {
   return {
     course_thumbnail_16_9: "",
-    trailer_video_thumb_16_9: "",
-    facebook_community_thumb_16_9: "",
+    course_thumbnail_card_4_3: "",
   };
 }
 

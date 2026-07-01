@@ -56,7 +56,7 @@ interface ToolbarPluginProps {
 }
 
 export function ToolbarPlugin({
-  uploadPurpose = "announcement-attachment",
+  uploadPurpose = "announcement-image",
 }: ToolbarPluginProps) {
   const [editor] = useLexicalComposerContext();
   const [altTextOpen, setAltTextOpen] = useState(false);

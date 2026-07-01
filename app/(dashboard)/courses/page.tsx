@@ -60,12 +60,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { GripVertical, Trash2 } from "lucide-react";
 import {
-  useCreateFeaturedCourse,
-  useDeleteFeaturedCourse,
-  useFeaturedCourses,
-  useReorderFeaturedCourses,
-  useUpdateFeaturedCourse,
-} from "@/hooks/useFeaturedCourses";
+  useCreateFeaturedItem,
+  useDeleteFeaturedItem,
+  useFeaturedItems,
+  useReorderFeaturedItems,
+  useUpdateFeaturedItem,
+} from "@/hooks/useFeaturedItems";
+import { useBundles } from "@/hooks/useBundles";
+import type { FeaturedItem, FeaturedItemType } from "@/services/featured-item.service";
 
 interface Course {
   id: number;
@@ -94,17 +96,17 @@ function formatPrice(price: number | undefined): string {
 export default function CoursesPage() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
-  const [selectedFeaturedCourseId, setSelectedFeaturedCourseId] = useState("");
+  const [selectedFeaturedKey, setSelectedFeaturedKey] = useState("");
 
   const usePermissionCheck = Array.isArray(user?.permissions);
   const canManageAllCourses = usePermissionCheck
     ? hasPermission(user?.permissions, "course.manage.all")
     : true;
-  const { data: featuredCoursesData, isLoading: featuredCoursesLoading } = useFeaturedCourses();
-  const createFeaturedCourse = useCreateFeaturedCourse();
-  const updateFeaturedCourse = useUpdateFeaturedCourse();
-  const reorderFeaturedCourses = useReorderFeaturedCourses();
-  const deleteFeaturedCourse = useDeleteFeaturedCourse();
+  const { data: featuredItemsData, isLoading: featuredItemsLoading } = useFeaturedItems();
+  const createFeaturedItem = useCreateFeaturedItem();
+  const updateFeaturedItem = useUpdateFeaturedItem();
+  const reorderFeaturedItems = useReorderFeaturedItems();
+  const deleteFeaturedItem = useDeleteFeaturedItem();
 
   const { data, isLoading } = useQuery({
     queryKey: ["courses"],
@@ -113,28 +115,35 @@ export default function CoursesPage() {
       return response.data.data as Course[];
     },
   });
+  const { data: bundlesResponse } = useBundles();
 
   const courses = data || [];
-  const featuredCourses = useMemo(() => featuredCoursesData ?? [], [featuredCoursesData]);
-  const featuredIds = useMemo(
-    () => new Set(featuredCourses.map((course) => course.course_id)),
-    [featuredCourses],
+  const bundles = useMemo(() => bundlesResponse?.data ?? [], [bundlesResponse]);
+  const featuredItems = useMemo(() => featuredItemsData ?? [], [featuredItemsData]);
+  const featuredKeys = useMemo(
+    () => new Set(featuredItems.map((item) => `${item.item_type}:${item.item_id}`)),
+    [featuredItems],
   );
-  const orderedFeaturedCourses = useMemo(
+  const orderedFeaturedItems = useMemo(
     () =>
-      [...featuredCourses].sort(
-        (a, b) => a.sort_order - b.sort_order || a.course_id - b.course_id,
+      [...featuredItems].sort(
+        (a, b) => a.sort_order - b.sort_order || a.item_id - b.item_id,
       ),
-    [featuredCourses],
+    [featuredItems],
   );
   const nextSortOrder = useMemo(() => {
-    if (featuredCourses.length === 0) return 1;
-    return Math.max(...featuredCourses.map((course) => course.sort_order || 0)) + 1;
-  }, [featuredCourses]);
-  const availableCourses = useMemo(
-    () => courses.filter((course) => !featuredIds.has(course.id)),
-    [courses, featuredIds],
-  );
+    if (featuredItems.length === 0) return 1;
+    return Math.max(...featuredItems.map((item) => item.sort_order || 0)) + 1;
+  }, [featuredItems]);
+  const availableItems = useMemo(() => {
+    const courseOptions = courses
+      .filter((course) => !featuredKeys.has(`course:${course.id}`))
+      .map((course) => ({ item_type: "course" as FeaturedItemType, item_id: course.id, title: course.title }));
+    const bundleOptions = bundles
+      .filter((bundle) => !featuredKeys.has(`bundle:${bundle.id}`))
+      .map((bundle) => ({ item_type: "bundle" as FeaturedItemType, item_id: bundle.id!, title: bundle.title }));
+    return [...courseOptions, ...bundleOptions];
+  }, [courses, bundles, featuredKeys]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -146,23 +155,23 @@ export default function CoursesPage() {
     );
   }, [courses, search]);
 
-  const [featuredRows, setFeaturedRows] = useState(orderedFeaturedCourses);
-  const orderedFeaturedCoursesSignature = useMemo(
+  const [featuredRows, setFeaturedRows] = useState(orderedFeaturedItems);
+  const orderedFeaturedItemsSignature = useMemo(
     () =>
-      orderedFeaturedCourses
-        .map((course) => `${course.course_id}:${course.sort_order}:${course.is_active ? 1 : 0}`)
+      orderedFeaturedItems
+        .map((item) => `${item.item_type}:${item.item_id}:${item.sort_order}:${item.is_active ? 1 : 0}`)
         .join("|"),
-    [orderedFeaturedCourses],
+    [orderedFeaturedItems],
   );
 
   useEffect(() => {
     setFeaturedRows((currentRows) => {
       const currentSignature = currentRows
-        .map((course) => `${course.course_id}:${course.sort_order}:${course.is_active ? 1 : 0}`)
+        .map((item) => `${item.item_type}:${item.item_id}:${item.sort_order}:${item.is_active ? 1 : 0}`)
         .join("|");
-      return currentSignature === orderedFeaturedCoursesSignature ? currentRows : orderedFeaturedCourses;
+      return currentSignature === orderedFeaturedItemsSignature ? currentRows : orderedFeaturedItems;
     });
-  }, [orderedFeaturedCourses, orderedFeaturedCoursesSignature]);
+  }, [orderedFeaturedItems, orderedFeaturedItemsSignature]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -176,22 +185,28 @@ export default function CoursesPage() {
     if (!over || active.id === over.id) return;
 
     const oldIndex = featuredRows.findIndex(
-      (course) => `featured-course-${course.course_id}` === active.id,
+      (item) => `featured-item-${item.item_type}-${item.item_id}` === active.id,
     );
     const newIndex = featuredRows.findIndex(
-      (course) => `featured-course-${course.course_id}` === over.id,
+      (item) => `featured-item-${item.item_type}-${item.item_id}` === over.id,
     );
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const nextRows = arrayMove(featuredRows, oldIndex, newIndex).map((course, index) => ({
-      ...course,
+    const nextRows = arrayMove(featuredRows, oldIndex, newIndex).map((item, index) => ({
+      ...item,
       sort_order: index + 1,
     }));
 
     const previousRows = featuredRows;
     setFeaturedRows(nextRows);
     try {
-      await reorderFeaturedCourses.mutateAsync(nextRows.map((course) => course.course_id));
+      await reorderFeaturedItems.mutateAsync(
+        nextRows.map((item) => ({
+          item_type: item.item_type,
+          item_id: item.item_id,
+          sort_order: item.sort_order,
+        })),
+      );
     } catch {
       setFeaturedRows(previousRows);
     }
@@ -226,22 +241,25 @@ export default function CoursesPage() {
           <CardHeader className="space-y-4">
             <CardTitle className="flex items-center gap-2">
               <FontAwesomeIcon icon={faStar} className="text-primary" />
-              Featured courses slider
+              Featured rail
           </CardTitle>
           <div className="flex flex-col gap-3 lg:flex-row">
-            <Select value={selectedFeaturedCourseId} onValueChange={setSelectedFeaturedCourseId}>
+            <Select value={selectedFeaturedKey} onValueChange={setSelectedFeaturedKey}>
               <SelectTrigger className="lg:max-w-xl">
-                <SelectValue placeholder="Select a course to add to the slider" />
+                <SelectValue placeholder="Select a course or combo to feature" />
               </SelectTrigger>
               <SelectContent>
-                {availableCourses.length === 0 ? (
+                {availableItems.length === 0 ? (
                   <SelectItem value="none" disabled>
-                    No remaining courses
+                    No remaining courses or combos
                   </SelectItem>
                 ) : (
-                  availableCourses.map((course) => (
-                    <SelectItem key={course.id} value={String(course.id)}>
-                      {course.title}
+                  availableItems.map((item) => (
+                    <SelectItem
+                      key={`${item.item_type}:${item.item_id}`}
+                      value={`${item.item_type}:${item.item_id}`}
+                    >
+                      {item.title} {item.item_type === "bundle" ? "(Combo)" : ""}
                     </SelectItem>
                   ))
                 )}
@@ -250,23 +268,25 @@ export default function CoursesPage() {
             <Button
               type="button"
               className="lg:w-auto"
-              disabled={!selectedFeaturedCourseId || createFeaturedCourse.isPending}
+              disabled={!selectedFeaturedKey || createFeaturedItem.isPending}
               onClick={() => {
-                const courseId = Number(selectedFeaturedCourseId);
-                if (!courseId) return;
-                createFeaturedCourse.mutate(
+                const [itemType, itemIdStr] = selectedFeaturedKey.split(":");
+                const itemId = Number(itemIdStr);
+                if (!itemType || !itemId) return;
+                createFeaturedItem.mutate(
                   {
-                    course_id: courseId,
+                    item_type: itemType as FeaturedItemType,
+                    item_id: itemId,
                     sort_order: nextSortOrder,
                     is_active: true,
                   },
                   {
-                    onSuccess: () => setSelectedFeaturedCourseId(""),
+                    onSuccess: () => setSelectedFeaturedKey(""),
                   },
                 );
               }}
             >
-              Add to slider
+              Add to featured rail
             </Button>
           </div>
         </CardHeader>
@@ -276,7 +296,7 @@ export default function CoursesPage() {
               <TableHeader>
                 <TableRow className="bg-muted/20">
                   <TableHead className="w-[68px]"></TableHead>
-                  <TableHead>Course</TableHead>
+                  <TableHead>Item</TableHead>
                   <TableHead className="w-[110px]">Status</TableHead>
                   <TableHead className="w-[110px]">Order</TableHead>
                   <TableHead className="w-[120px]">Published</TableHead>
@@ -284,37 +304,38 @@ export default function CoursesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {featuredCoursesLoading ? (
+                {featuredItemsLoading ? (
                   <TableRow>
                     <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                      Loading featured courses...
+                      Loading featured rail...
                     </TableCell>
                   </TableRow>
-                ) : featuredCourses.length === 0 ? (
+                ) : featuredItems.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                      No courses selected for the slider yet.
+                      No courses or combos selected for the featured rail yet.
                     </TableCell>
                   </TableRow>
                 ) : (
                   <SortableContext
-                    items={featuredRows.map((course) => `featured-course-${course.course_id}`)}
+                    items={featuredRows.map((item) => `featured-item-${item.item_type}-${item.item_id}`)}
                     strategy={verticalListSortingStrategy}
                   >
-                    {featuredRows.map((course) => (
-                        <SortableFeaturedCourseRow
-                          key={course.course_id}
-                          course={course}
-                          sortable={!reorderFeaturedCourses.isPending}
-                          isReordering={reorderFeaturedCourses.isPending}
-                          isUpdating={updateFeaturedCourse.isPending}
+                    {featuredRows.map((item) => (
+                        <SortableFeaturedItemRow
+                          key={`${item.item_type}:${item.item_id}`}
+                          item={item}
+                          sortable={!reorderFeaturedItems.isPending}
+                          isReordering={reorderFeaturedItems.isPending}
+                          isUpdating={updateFeaturedItem.isPending}
                           onPublishedChange={(checked) =>
-                            updateFeaturedCourse.mutate({
-                              course_id: course.course_id,
+                            updateFeaturedItem.mutate({
+                              item_type: item.item_type,
+                              item_id: item.item_id,
                             is_active: checked,
                           })
                         }
-                        onRemove={() => deleteFeaturedCourse.mutate(course.course_id)}
+                        onRemove={() => deleteFeaturedItem.mutate({ item_type: item.item_type, item_id: item.item_id })}
                       />
                     ))}
                   </SortableContext>
@@ -369,22 +390,15 @@ export default function CoursesPage() {
   );
 }
 
-function SortableFeaturedCourseRow({
-  course,
+function SortableFeaturedItemRow({
+  item,
   sortable,
   isReordering,
   isUpdating,
   onPublishedChange,
   onRemove,
 }: {
-  course: {
-    course_id: number;
-    sort_order: number;
-    is_active: boolean;
-    title: string;
-    short_description?: string;
-    is_live?: boolean;
-  };
+  item: FeaturedItem;
   sortable: boolean;
   isReordering: boolean;
   isUpdating: boolean;
@@ -399,7 +413,7 @@ function SortableFeaturedCourseRow({
     transition,
     isDragging,
   } = useSortable({
-    id: `featured-course-${course.course_id}`,
+    id: `featured-item-${item.item_type}-${item.item_id}`,
     disabled: !sortable || isReordering,
   });
 
@@ -417,7 +431,7 @@ function SortableFeaturedCourseRow({
             "inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/70 text-muted-foreground transition-colors",
             sortable && !isReordering ? "cursor-grab hover:bg-muted active:cursor-grabbing" : "cursor-default opacity-60",
           )}
-          aria-label="Drag to reorder featured course"
+          aria-label="Drag to reorder featured item"
           {...attributes}
           {...listeners}
           disabled={!sortable || isReordering}
@@ -427,25 +441,23 @@ function SortableFeaturedCourseRow({
       </TableCell>
       <TableCell>
         <div className="space-y-1">
-          <p className="font-medium">{course.title}</p>
-          {course.short_description ? (
-            <p className="line-clamp-2 text-sm text-muted-foreground">
-              {course.short_description}
-            </p>
-          ) : null}
+          <p className="font-medium">{item.title || `#${item.item_id}`}</p>
+          <Badge variant="outline" className="text-xs">
+            {item.item_type === "bundle" ? "Combo" : "Course"}
+          </Badge>
         </div>
       </TableCell>
       <TableCell>
-        <Badge variant={course.is_live ? "default" : "secondary"}>
-          {course.is_live ? "Live" : "Draft"}
+        <Badge variant={item.is_live ? "default" : "secondary"}>
+          {item.is_live ? "Live" : "Draft"}
         </Badge>
       </TableCell>
       <TableCell>
-        <Badge variant="outline">{course.sort_order}</Badge>
+        <Badge variant="outline">{item.sort_order}</Badge>
       </TableCell>
       <TableCell>
         <Switch
-          checked={course.is_active}
+          checked={item.is_active}
           disabled={isUpdating}
           onCheckedChange={onPublishedChange}
         />

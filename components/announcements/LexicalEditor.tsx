@@ -119,7 +119,7 @@ export function LexicalEditor({
   onChange,
   onTextChange,
   placeholder = "Enter announcement description...",
-  uploadPurpose = "announcement-attachment",
+  uploadPurpose = "announcement-image",
 }: LexicalEditorProps) {
   const [isMounted, setIsMounted] = useState(false);
 

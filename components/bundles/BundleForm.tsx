@@ -72,6 +72,21 @@ function setBundleThumb43(chips: unknown, nextThumb: string): BundleChips {
   };
 }
 
+function getBundleThumbnail169(chips: unknown): string {
+  return normalizeBundleChips(chips).thumbnails?.bundle_thumbnail_16_9 || "";
+}
+
+function setBundleThumbnail169(chips: unknown, nextThumb: string): BundleChips {
+  const current = normalizeBundleChips(chips);
+  return {
+    ...current,
+    thumbnails: {
+      ...(current.thumbnails || {}),
+      bundle_thumbnail_16_9: nextThumb,
+    },
+  };
+}
+
 function extractCourses(data: unknown): Course[] {
   if (!data) return [];
   if (Array.isArray(data)) return data as Course[];
@@ -220,6 +235,7 @@ export function BundleForm({ mode, bundleId, bundleRef }: BundleFormProps) {
   };
 
   const bundleThumbnail = getBundleThumb43(formData.chips);
+  const bundleThumbnailBanner = getBundleThumbnail169(formData.chips);
 
   const toggleCourse = (id: number) => {
     setSelectedCourseIds((prev) =>
@@ -424,20 +440,38 @@ export function BundleForm({ mode, bundleId, bundleRef }: BundleFormProps) {
 
           <FormSection
             title="Media"
-            description="Upload the main combo thumbnail used across the student site."
+            description="Upload the combo thumbnails used across the student site."
             icon={ImageIcon}
           >
-            <ThumbnailUploadField
-              label="bundle_thumb_4_3"
-              description="Primary combo thumbnail shown in combo cards and detail pages."
-              value={bundleThumbnail}
-              onChange={(nextThumb) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  chips: setBundleThumb43(prev.chips, nextThumb),
-                }))
-              }
-            />
+            <div className="space-y-6">
+              <ThumbnailUploadField
+                label="bundle_thumbnail_16_9"
+                description="Banner/slider thumbnail shown on the courses page and the Featured rail."
+                value={bundleThumbnailBanner}
+                purpose="bundle-thumbnail-banner"
+                aspectRatio="16:9"
+                onChange={(nextThumb) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    chips: setBundleThumbnail169(prev.chips, nextThumb),
+                  }))
+                }
+              />
+
+              <ThumbnailUploadField
+                label="bundle_thumb_4_3"
+                description="Card thumbnail shown in combo cards."
+                value={bundleThumbnail}
+                purpose="bundle-thumbnail-card"
+                aspectRatio="4:3"
+                onChange={(nextThumb) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    chips: setBundleThumb43(prev.chips, nextThumb),
+                  }))
+                }
+              />
+            </div>
           </FormSection>
 
           {/* Courses */}

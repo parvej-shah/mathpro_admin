@@ -307,14 +307,16 @@ export function CourseForm({
           <TabsContent value="thumbnails" className="mt-0 space-y-6">
             <FormSection
               title="Thumbnails"
-              description="Upload the three thumbnail assets used across the course page."
+              description="Upload the banner and card thumbnails used across the course page."
               icon={ImageIcon}
             >
               <div className="space-y-6">
                 <ThumbnailUploadField
                   label="course_thumbnail_16_9"
-                  description="Main course thumbnail used across listings and the course page."
+                  description="Banner/slider thumbnail shown on the courses page and the Featured rail."
                   value={chips.thumbnails.course_thumbnail_16_9}
+                  purpose="course-thumbnail-banner"
+                  aspectRatio="16:9"
                   onChange={(course_thumbnail_16_9) =>
                     setChips((prev) => ({
                       ...prev,
@@ -327,30 +329,17 @@ export function CourseForm({
                 />
 
                 <ThumbnailUploadField
-                  label="trailer_video_thumb_16_9"
-                  description="Thumbnail used for the course intro video."
-                  value={chips.thumbnails.trailer_video_thumb_16_9}
-                  onChange={(trailer_video_thumb_16_9) =>
+                  label="course_thumbnail_card_4_3"
+                  description="Card thumbnail shown in course grids. Falls back to the banner image above until set."
+                  value={chips.thumbnails.course_thumbnail_card_4_3}
+                  purpose="course-thumbnail-card"
+                  aspectRatio="4:3"
+                  onChange={(course_thumbnail_card_4_3) =>
                     setChips((prev) => ({
                       ...prev,
                       thumbnails: {
                         ...prev.thumbnails,
-                        trailer_video_thumb_16_9,
-                      },
-                    }))
-                  }
-                />
-
-                <ThumbnailUploadField
-                  label="facebook_community_thumb_16_9"
-                  description="Thumbnail used for the Facebook community link."
-                  value={chips.thumbnails.facebook_community_thumb_16_9}
-                  onChange={(facebook_community_thumb_16_9) =>
-                    setChips((prev) => ({
-                      ...prev,
-                      thumbnails: {
-                        ...prev.thumbnails,
-                        facebook_community_thumb_16_9,
+                        course_thumbnail_card_4_3,
                       },
                     }))
                   }
