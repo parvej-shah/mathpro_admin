@@ -75,7 +75,6 @@ export function TeacherForm({
     },
     courses_teaching: [] as number[],
     isActive: true,
-    isPrivileged: false, // CRITICAL: Controls admin panel access
   });
   const [newAchievement, setNewAchievement] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -123,7 +122,6 @@ export function TeacherForm({
         },
         courses_teaching: [],
         isActive: true,
-        isPrivileged: false,
       });
       setNewAchievement("");
       setImageFile(null);
@@ -149,8 +147,6 @@ export function TeacherForm({
         },
         courses_teaching: teacher.courses_teaching || [],
         isActive: teacher.isActive !== undefined ? teacher.isActive : true,
-        isPrivileged:
-          teacher.isPrivileged !== undefined ? teacher.isPrivileged : false,
       });
       setImagePreview(teacher.image || "");
     }
@@ -241,7 +237,6 @@ export function TeacherForm({
             ? formData.courses_teaching
             : undefined,
         isActive: formData.isActive,
-        isPrivileged: formData.isPrivileged, // CRITICAL FLAG
       };
 
       if (isEditMode && teacher) {
@@ -565,36 +560,6 @@ export function TeacherForm({
               <Label htmlFor="isActive" className="cursor-pointer">
                 Active Teacher
               </Label>
-            </div>
-
-            <div className="flex items-center space-x-2 border-t pt-4">
-              <Checkbox
-                id="isPrivileged"
-                checked={formData.isPrivileged}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, isPrivileged: checked === true })
-                }
-              />
-              <div className="flex-1">
-                <Label
-                  htmlFor="isPrivileged"
-                  className="cursor-pointer font-semibold"
-                >
-                  Grant Admin Panel Access
-                </Label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  If checked, teacher keeps their existing password and receives
-                  an email to access the admin panel. Email is required in
-                  Phone/Email above to grant access. If unchecked, admin access
-                  is revoked.
-                </p>
-                {formData.isPrivileged &&
-                  (!formData.login?.trim() || !formData.login.includes("@")) && (
-                    <p className="text-xs text-warning mt-1">
-                      Add an email in Phone/Email above so we can send credentials; grant may fail otherwise.
-                    </p>
-                  )}
-              </div>
             </div>
           </div>
 

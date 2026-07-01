@@ -173,8 +173,12 @@ export function CourseFeedbackList({ onExport }: CourseFeedbackListProps) {
         return "secondary";
       case "platform":
         return "outline";
-      default:
+      case "course":
         return "secondary";
+      case "other":
+        return "destructive";
+      default:
+        return "outline";
     }
   };
 
@@ -393,7 +397,7 @@ export function CourseFeedbackList({ onExport }: CourseFeedbackListProps) {
                         <Badge variant={getCategoryBadgeVariant(feedback.category)}>
                           {FEEDBACK_CATEGORIES.find(
                             (c) => c.value === feedback.category
-                          )?.label || feedback.category}
+                          )?.label || feedback.category || "Uncategorized"}
                         </Badge>
                       </TableCell>
                       <TableCell className="max-w-[300px]">
@@ -576,7 +580,7 @@ export function CourseFeedbackList({ onExport }: CourseFeedbackListProps) {
                     >
                       {FEEDBACK_CATEGORIES.find(
                         (c) => c.value === selectedFeedback.category
-                      )?.label || selectedFeedback.category}
+                      )?.label || selectedFeedback.category || "Uncategorized"}
                     </Badge>
                   </div>
                 </div>

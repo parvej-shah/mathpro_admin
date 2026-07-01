@@ -372,7 +372,6 @@ function StatCard({ label, value, tone, loading }: StatCardProps) {
           toneStyles
         )}
       />
-      // changed the class name to linier
       <div className="relative flex flex-col gap-1">
         <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           {label}

@@ -207,29 +207,6 @@ export default function TestimonialManagementPage() {
           isSubmitting={createManualReview.isPending}
         />
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card className="rounded-3xl border-border/70 bg-linear-to-br from-card to-primary/5">
-            <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Featured testimonials</p>
-              <p className="mt-2 text-3xl font-semibold">{testimonials.length}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-border/70 bg-linear-to-br from-card to-emerald-500/5">
-            <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Published</p>
-              <p className="mt-2 text-3xl font-semibold">
-                {testimonials.filter((item) => item.is_active).length}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-border/70 bg-linear-to-br from-card to-amber-500/5">
-            <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Candidate reviews on page</p>
-              <p className="mt-2 text-3xl font-semibold">{candidateFeedbacks.length}</p>
-            </CardContent>
-          </Card>
-        </div>
-
         <Card className="rounded-3xl border-border/70 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
