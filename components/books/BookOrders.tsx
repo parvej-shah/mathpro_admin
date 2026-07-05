@@ -133,7 +133,11 @@ export function BookOrders() {
                     <span className="inline-flex items-center rounded-full bg-muted/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                       Course #{order.course_id}
                     </span>
-                  ) : null}
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                      Standalone
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
