@@ -207,9 +207,6 @@ export function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
 
   const handleLogout = () => {
     logout();
-    if (typeof window !== "undefined") {
-      window.location.href = "/login";
-    }
   };
 
   const permissions = user?.permissions;
