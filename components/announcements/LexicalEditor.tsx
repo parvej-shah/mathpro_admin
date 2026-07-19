@@ -33,7 +33,6 @@ import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { TRANSFORMERS } from "@lexical/markdown";
 import { ToolbarPlugin } from "./LexicalToolbar";
-import { LaTeXPlugin } from "@/lib/editors/latex-plugin";
 import { MarkdownPastePlugin } from "@/lib/editors/markdown-paste-plugin";
 import { LaTeXPastePlugin } from "@/lib/editors/latex-paste-plugin";
 import type { UploadPurpose } from "@/lib/s3-upload";
@@ -156,7 +155,6 @@ export function LexicalEditor({
           <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
           <LaTeXPastePlugin />
           <MarkdownPastePlugin />
-          <LaTeXPlugin />
           <OnChange onChange={onChange} onTextChange={onTextChange} />
           {initialHtml && <InitialContentPlugin html={initialHtml} />}
         </div>
