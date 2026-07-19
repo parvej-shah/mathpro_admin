@@ -45,6 +45,7 @@ import {
   Code2,
 } from "lucide-react";
 import { insertLaTeXEquation } from "@/lib/editors/latex-plugin";
+import { LaTeXEquationDialog } from "@/components/announcements/LaTeXEquationDialog";
 import {
   uploadImageToS3,
   type UploadPurpose,
@@ -64,6 +65,8 @@ export function ToolbarPlugin({
   const [pendingEditorState, setPendingEditorState] =
     useState<EditorState | null>(null);
   const [altText, setAltText] = useState("");
+  const [latexDialogOpen, setLatexDialogOpen] = useState(false);
+  const [latexDisplayMode, setLatexDisplayMode] = useState(false);
 
   useEffect(() => {
     if (!altTextOpen) {
@@ -329,12 +332,8 @@ export function ToolbarPlugin({
           variant="ghost"
           size="sm"
           onClick={() => {
-            const latex = prompt(
-              "Enter LaTeX equation (e.g., x^2 + 5x + 6 = 0):"
-            );
-            if (latex) {
-              insertLaTeXEquation(editor, latex, false);
-            }
+            setLatexDisplayMode(false);
+            setLatexDialogOpen(true);
           }}
           title="Insert Inline Equation"
         >
@@ -345,16 +344,21 @@ export function ToolbarPlugin({
           variant="ghost"
           size="sm"
           onClick={() => {
-            const latex = prompt("Enter LaTeX equation (block):");
-            if (latex) {
-              insertLaTeXEquation(editor, latex, true);
-            }
+            setLatexDisplayMode(true);
+            setLatexDialogOpen(true);
           }}
           title="Insert Block Equation"
         >
           <span className="text-xs font-mono">$$</span>
         </Button>
       </div>
+
+      <LaTeXEquationDialog
+        open={latexDialogOpen}
+        onOpenChange={setLatexDialogOpen}
+        displayMode={latexDisplayMode}
+        onConfirm={(latex) => insertLaTeXEquation(editor, latex, latexDisplayMode)}
+      />
 
       <Dialog
         open={altTextOpen}

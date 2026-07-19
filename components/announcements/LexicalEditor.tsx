@@ -35,6 +35,7 @@ import { TRANSFORMERS } from "@lexical/markdown";
 import { ToolbarPlugin } from "./LexicalToolbar";
 import { LaTeXPlugin } from "@/lib/editors/latex-plugin";
 import { MarkdownPastePlugin } from "@/lib/editors/markdown-paste-plugin";
+import { LaTeXPastePlugin } from "@/lib/editors/latex-paste-plugin";
 import type { UploadPurpose } from "@/lib/s3-upload";
 
 const theme = {
@@ -153,6 +154,7 @@ export function LexicalEditor({
           <ListPlugin />
           <LinkPlugin />
           <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+          <LaTeXPastePlugin />
           <MarkdownPastePlugin />
           <LaTeXPlugin />
           <OnChange onChange={onChange} onTextChange={onTextChange} />
