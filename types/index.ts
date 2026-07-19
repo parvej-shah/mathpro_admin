@@ -73,6 +73,7 @@ export interface Course {
   description?: string;
   price?: number;
   x_price?: number;
+  is_free?: boolean;
   language?: string;
   short_description?: string;
   intro_video?: string;

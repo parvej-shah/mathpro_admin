@@ -14,6 +14,7 @@ export interface CreateCourseData {
   description?: string;
   price?: number;
   x_price?: number;
+  is_free?: boolean;
   language?: string;
   short_description?: string;
   intro_video?: string;
@@ -33,6 +34,7 @@ export interface UpdateCourseFullData {
   description?: string;
   price?: number;
   x_price?: number;
+  is_free?: boolean;
   language?: string;
   short_description?: string;
   intro_video?: string;

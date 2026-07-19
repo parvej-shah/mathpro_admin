@@ -44,6 +44,7 @@ export function CourseBasicInfoForm({
 }: CourseBasicInfoFormProps) {
   const language = watch("language");
   const isLive = watch("is_live");
+  const isFree = watch("is_free");
   const courseOutline = watch("course_outline") || "";
   const outlineFileInputRef = useRef<HTMLInputElement>(null);
   const [outlineMode, setOutlineMode] = useState<"link" | "upload">("link");
@@ -422,6 +423,26 @@ export function CourseBasicInfoForm({
             {errors.price && (
               <p className="text-sm text-destructive">{errors.price.message}</p>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="is_free">Free Course</Label>
+            <input type="hidden" {...register("is_free")} />
+            <div className="h-10 px-3 border rounded-md flex items-center justify-between">
+              <span className="text-sm">
+                {isFree ? "Free" : "Paid"}
+              </span>
+              <Switch
+                id="is_free"
+                checked={!!isFree}
+                onCheckedChange={(checked) => {
+                  setValue("is_free", checked, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
+                }}
+              />
+            </div>
           </div>
         </div>
 

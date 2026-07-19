@@ -158,6 +158,7 @@ export function CourseForm({
         short_description: data.short_description,
         price: data.price,
         x_price: data.x_price,
+        is_free: data.is_free,
         language: data.language,
         intro_video: data.intro_video || undefined,
         url: data.hosted_url || undefined,

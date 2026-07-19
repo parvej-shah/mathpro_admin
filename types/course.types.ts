@@ -11,6 +11,7 @@ export interface CourseFormData {
   description: string;
   price: number;
   x_price: number;
+  is_free: boolean;
   language: "বাংলা" | "English";
   is_live: boolean;
   enrolled: number;

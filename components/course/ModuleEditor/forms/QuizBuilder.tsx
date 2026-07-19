@@ -100,18 +100,19 @@ export function QuizBuilder({ questions, onChange }: QuizBuilderProps) {
   };
 
   const handleAddOption = (questionId: string) => {
+    const target = questions.find((q) => q.id === questionId);
+    if (!target) return;
     handleUpdateQuestion(questionId, {
-      options: [...(activeQuestion?.options || []), ""],
-      options_html: [...(activeQuestion?.options_html || []), ""],
+      options: [...target.options, ""],
+      options_html: [...target.options_html, ""],
     });
   };
 
   const handleRemoveOption = (questionId: string, optionIndex: number) => {
-    if (activeQuestion && activeQuestion.options.length > 2) {
-      const newOptions = activeQuestion.options.filter(
-        (_, i) => i !== optionIndex
-      );
-      const newOptionsHtml = activeQuestion.options_html.filter(
+    const target = questions.find((q) => q.id === questionId);
+    if (target && target.options.length > 2) {
+      const newOptions = target.options.filter((_, i) => i !== optionIndex);
+      const newOptionsHtml = target.options_html.filter(
         (_, i) => i !== optionIndex
       );
       handleUpdateQuestion(questionId, {
@@ -119,9 +120,9 @@ export function QuizBuilder({ questions, onChange }: QuizBuilderProps) {
         options_html: newOptionsHtml,
         // Clear correct answer if it was the removed option
         correct_answer:
-          activeQuestion.correct_answer === activeQuestion.options[optionIndex]
+          target.correct_answer === target.options[optionIndex]
             ? ""
-            : activeQuestion.correct_answer,
+            : target.correct_answer,
       });
     } else {
       toast.error("Quiz questions must have at least 2 options");
@@ -432,7 +433,7 @@ function QuestionEditor({
               
               return (
                 <Card
-                  key={`${question.id}-option-${index}`}
+                  key={`${question.id}-option-${question.options.length}-${index}`}
                   className={`p-4 ${
                     isCorrect
                       ? "border-primary border-2 bg-primary/5"
@@ -459,7 +460,7 @@ function QuestionEditor({
                         )}
                       </Label>
                       <LexicalEditor
-                        key={`${question.id}-option-editor-${index}`}
+                        key={`${question.id}-option-editor-${question.options.length}-${index}`}
                         initialHtml={question.options_html[index] || option || ""}
                         uploadPurpose="quiz-image"
                         onChange={(html) => {
